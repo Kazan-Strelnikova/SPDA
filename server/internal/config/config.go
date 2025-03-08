@@ -15,6 +15,7 @@ type Config struct {
 	DBPassword	string
 	DBName		string
 	ServerPort	string
+	Env			string
 	RWTimeout	time.Duration
 	IdleTimeout	time.Duration
 }
@@ -43,6 +44,7 @@ func LoadConfig() *Config {
         ServerPort:  getEnv("SERVER_PORT", "8080"),
         RWTimeout:   rwTimeout,
         IdleTimeout: idleTimeout,
+		Env: 		 getEnv("ENV", "local"),
     }
     return config
 }
