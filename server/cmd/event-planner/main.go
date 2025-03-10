@@ -13,6 +13,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/ping"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/login"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/register"
+	tokenlogin "github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/token_login"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/log"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/service"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/postgres"
@@ -42,8 +43,9 @@ func main() {
 	// router.SetTrustedProxies()
 
 	router.GET("/ping", ping.New(log))
-	router.POST("/users/signin", login.New(log, service, cfg.RWTimeout))
 	router.POST("/users/signup", register.New(log, service, cfg.RWTimeout))
+	router.POST("/users/signin", login.New(log, service, cfg.RWTimeout))
+	router.GET("/users/signin/cookie", tokenlogin.New(log, service, cfg.RWTimeout))
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
