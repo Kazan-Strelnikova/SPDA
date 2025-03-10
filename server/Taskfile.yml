@@ -29,3 +29,7 @@ tasks:
   migrate-down:
     cmds:
       - go run cmd/migrator/main.go -db "{{.DB_URL}}" -path "./migrations" -action down
+
+  run:
+    cmds:
+      - go run cmd/event-planner/main.go
