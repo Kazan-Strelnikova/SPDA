@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -22,6 +23,10 @@ type UserRepository interface {
 	InsertUser(ctx context.Context, usr user.User) error
 }
 
+var (
+	ErrInvalidToken = errors.New("invalid user token")
+)
+
 func New(
 	log *slog.Logger,
 	usrRepo UserRepository,
@@ -34,7 +39,7 @@ func New(
 	}
 }
 
-func (s *Service) Login(ctx context.Context, email, password string) (user.User, error) {
+func (s *Service) Login(ctx context.Context, email, password string) (user.User, string, error) {
 	const op = "service.Login"
 
 	log := s.log.With(
@@ -45,15 +50,53 @@ func (s *Service) Login(ctx context.Context, email, password string) (user.User,
 	usr, err := s.usrRepo.GetUser(ctx, email)
 	if err != nil {
 		log.Error("error getting user", slog.String("error", err.Error()))
-		return user.User{}, fmt.Errorf("invalid email or password")
+		return user.User{}, "", fmt.Errorf("invalid email or password")
 	}
 
 	if !checkPasswordHash(password, usr.Password) {
 		log.Error("incorrect password")
-		return user.User{}, fmt.Errorf("invalid email or password")
+		return user.User{}, "", fmt.Errorf("invalid email or password")
+	}
+
+	usr.Password = ""
+
+	token, err := generateTokens(s.tknScrt, usr)
+	if err != nil {
+		log.Error("error creating token", slog.String("error", err.Error()))
+		return user.User{}, "", fmt.Errorf("error creating token")
 	}
 	
-	return usr, nil
+	return usr, token, nil
+}
+
+func (s *Service) LoginByToken(ctx context.Context, token string) (user.User, error) {
+	const op = "service.LoginByToken"
+
+	log := s.log.With(
+		slog.String("op", op),
+	)
+
+	secret := []byte(s.tknScrt)
+
+	data, err := jwt.ParseWithClaims(token, &user.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); ok && token.Method.Alg() == jwt.SigningMethodHS256.Alg() {
+			return secret, nil
+		}
+		return nil, ErrInvalidToken
+	})
+
+	if err != nil {
+		log.Error("invalid jwt token", slog.String("err", err.Error()))
+		return user.User{}, ErrInvalidToken
+	}
+
+	if claims, ok := data.Claims.(*user.UserClaims); ok && data.Valid {
+		log.Info("token validated successfully", slog.Any("email", claims.Payload.Email))
+		return claims.Payload, nil
+	}
+
+	log.Error("invalid jwt token")
+	return user.User{}, ErrInvalidToken
 }
 
 func (s *Service) Register(ctx context.Context, usr user.User) (string, error) {
@@ -103,7 +146,7 @@ func checkPasswordHash(password, hash string) bool {
 func generateTokens(accessSecret string, usr user.User) (string, error) {
 
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(15 * time.Minute).Unix(),
+		"exp": time.Now().Add(time.Hour * 24 * 365).Unix(),
 		"payload": usr,
 	}).SignedString([]byte(accessSecret))
 	if err != nil {
