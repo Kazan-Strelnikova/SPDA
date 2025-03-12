@@ -19,20 +19,20 @@ CREATE TABLE IF NOT EXISTS events (
     date TIMESTAMP NOT NULL,
     total_seats INT NOT NULL CHECK (total_seats > 0),
     available_seats INT NOT NULL CHECK (available_seats >= 0),
-    creator_id UUID NOT NULL,
+    creator_email TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     location GEOGRAPHY(Point, 4326) NOT NULL,
     description TEXT,
-    CONSTRAINT fk_creator FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_creator FOREIGN KEY (creator_email) REFERENCES users(email) ON DELETE CASCADE
 );
 
 -- Create enrollments table
 CREATE TABLE IF NOT EXISTS enrollments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     created_at TIMESTAMP DEFAULT NOW(),
-    user_id UUID NOT NULL,
+    user_email TEXT NOT NULL,
     event_id UUID NOT NULL,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE,
     CONSTRAINT fk_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-    UNIQUE (user_id, event_id) -- Ensures a user cannot enroll in the same event multiple times
+    UNIQUE (user_email, event_id) -- Ensures a user cannot enroll in the same event multiple times
 );

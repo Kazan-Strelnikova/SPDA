@@ -20,21 +20,21 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
-func New(log *slog.Logger, service UserService, timeout time.Duration) func(c *gin.Context) {	
+func New(log *slog.Logger, service UserService, timeout time.Duration) func(c *gin.Context) {
 	validate := validator.New()
 
 	return func(c *gin.Context) {
-		
+
 		log.Info("login request")
-		
+
 		var req LoginRequest
-		
+
 		if err := c.ShouldBindJSON(&req); err != nil {
 			log.Error("Invalid request format", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 			return
 		}
-		
+
 		if err := validate.Struct(req); err != nil {
 			log.Error("Validation failed", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
@@ -53,11 +53,11 @@ func New(log *slog.Logger, service UserService, timeout time.Duration) func(c *g
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
-		
+
 		log.Info("login succeeded")
 
-		c.SetCookie("token", token, 3600 * 24 * 365, "/", "", false, true)
-		
+		c.SetCookie("token", token, 3600*24*365, "/", "", false, true)
+
 		c.JSON(http.StatusOK, gin.H{
 			"user": user,
 		})

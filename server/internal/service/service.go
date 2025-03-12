@@ -7,20 +7,31 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/event"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/user"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/paulmach/orb"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	log 	*slog.Logger
+	log     *slog.Logger
 	usrRepo UserRepository
+	evtRepo EventRepository
 	tknScrt string
 }
 
 type UserRepository interface {
 	GetUser(ctx context.Context, email string) (user.User, error)
 	InsertUser(ctx context.Context, usr user.User) error
+}
+
+type EventRepository interface {
+	InsertEvent(ctx context.Context, evt *event.Event) error
+	DeleteEvent(ctx context.Context, id uuid.UUID) error
+	GetEvent(ctx context.Context, id uuid.UUID) (event.Event, error)
+	GetAllEvents(ctx context.Context, limit, offset *int, eventType *int, creatorEmail *string, before, after *time.Time, location *orb.Point, radius *float64, visitorEmail *string) ([]event.Event, error)
 }
 
 var (
@@ -30,11 +41,13 @@ var (
 func New(
 	log *slog.Logger,
 	usrRepo UserRepository,
+	evtRepo EventRepository,
 	tokenSecret string,
 ) *Service {
 	return &Service{
-		log: log,
+		log:     log,
 		usrRepo: usrRepo,
+		evtRepo: evtRepo,
 		tknScrt: tokenSecret,
 	}
 }
@@ -65,7 +78,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (user.User,
 		log.Error("error creating token", slog.String("error", err.Error()))
 		return user.User{}, "", fmt.Errorf("error creating token")
 	}
-	
+
 	return usr, token, nil
 }
 
@@ -112,9 +125,8 @@ func (s *Service) Register(ctx context.Context, usr user.User) (string, error) {
 	usr.Password, err = hashPassword(usr.Password)
 	if err != nil {
 		log.Error("error hashing password", slog.String("error", err.Error()))
-		return	"", fmt.Errorf("invalid password")
+		return "", fmt.Errorf("invalid password")
 	}
-
 
 	err = s.usrRepo.InsertUser(ctx, usr)
 	if err != nil {
@@ -133,6 +145,116 @@ func (s *Service) Register(ctx context.Context, usr user.User) (string, error) {
 	return token, nil
 }
 
+func (s *Service) CreateEvent(ctx context.Context, evt event.Event) (event.Event, error) {
+	const op = "service.CreateEvent"
+
+	log := s.log.With(
+		slog.String("op", op),
+		slog.String("creator_email", evt.CreatorEmail),
+	)
+
+	_, err := s.usrRepo.GetUser(ctx, evt.CreatorEmail)
+	if err != nil {
+		log.Error("creator not found", slog.String("error", err.Error()))
+		return event.Event{}, fmt.Errorf("creator not found")
+	}
+
+	err = s.evtRepo.InsertEvent(ctx, &evt)
+	if err != nil {
+		log.Error("error inserting event", slog.String("error", err.Error()))
+		return event.Event{}, fmt.Errorf("error creating event")
+	}
+
+	return evt, nil
+}
+
+func (s *Service) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
+	const op = "service.DeleteEvent"
+
+	log := s.log.With(
+		slog.String("op", op),
+		slog.String("event_id", eventID.String()),
+	)
+
+	email, ok := ctx.Value("email").(string)
+	if !ok || email == "" {
+		log.Error("email not found in context")
+		return fmt.Errorf("email not found in context")
+	}
+
+	evt, err := s.evtRepo.GetEvent(ctx, eventID)
+	if err != nil {
+		log.Error("error getting event", slog.String("error", err.Error()))
+		return fmt.Errorf("event not found")
+	}
+
+	if evt.CreatorEmail != email {
+		log.Error("user is not the creator of the event")
+		return fmt.Errorf("user is not the creator of this event")
+	}
+
+	err = s.evtRepo.DeleteEvent(ctx, eventID)
+	if err != nil {
+		log.Error("error deleting event", slog.String("error", err.Error()))
+		return fmt.Errorf("error deleting event")
+	}
+
+	return nil
+}
+
+func (s *Service) GetEvent(ctx context.Context, eventID uuid.UUID) (event.Event, error) {
+	const op = "service.GetEvent"
+
+	log := s.log.With(
+		slog.String("op", op),
+		slog.String("event_id", eventID.String()),
+	)
+
+	evt, err := s.evtRepo.GetEvent(ctx, eventID)
+	if err != nil {
+		log.Error("error getting event", slog.String("error", err.Error()))
+		return event.Event{}, fmt.Errorf("event not found")
+	}
+
+	return evt, nil
+}
+
+func (s *Service) GetAllEvents(
+	ctx context.Context,
+	limit, offset *int,
+	eventType *int,
+	creatorEmail *string,
+	before, after *time.Time,
+	location *orb.Point,
+	radius *float64,
+	visitorEmail *string,
+) ([]event.Event, error) {
+	const op = "service.GetAllEvents"
+
+	log := s.log.With(
+		slog.String("op", op),
+	)
+
+	events, err := s.evtRepo.GetAllEvents(
+		ctx,
+		limit,
+		offset,
+		eventType,
+		creatorEmail,
+		before,
+		after,
+		location,
+		radius,
+		visitorEmail,
+	)
+	if err != nil {
+		log.Error("error retrieving events", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("error retrieving events")
+	}
+
+	return events, nil
+}
+
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
@@ -146,7 +268,7 @@ func checkPasswordHash(password, hash string) bool {
 func generateTokens(accessSecret string, usr user.User) (string, error) {
 
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(time.Hour * 24 * 365).Unix(),
+		"exp":     time.Now().Add(time.Hour * 24 * 365).Unix(),
 		"payload": usr,
 	}).SignedString([]byte(accessSecret))
 	if err != nil {
