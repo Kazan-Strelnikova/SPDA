@@ -11,9 +11,11 @@ import (
 
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/config"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/create"
+	createEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/create"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/get"
 	getall "github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/getAll"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/middleware/auth"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/ping"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/login"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/register"
@@ -55,32 +57,8 @@ func main() {
 	router.POST("/events", create.New(log, service, cfg.RWTimeout))
 	router.GET("/events", getall.New(log, service, cfg.RWTimeout))
 	router.GET("/events/:event_id", get.New(log, service, cfg.RWTimeout))
-	router.DELETE("/events/:event_id", func(c *gin.Context) {
-		log.Info("attempt of cookie login through middleware")
-
-		token, err := c.Cookie("token")
-		if err != nil {
-			log.Error("Missing authentication token", "error", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(c.Request.Context(), cfg.RWTimeout)
-		defer cancel()
-
-		usr, err := service.LoginByToken(ctx, token)
-		if err != nil {
-			log.Error("Invalid authentication token", "error", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			return
-		}
-
-		log.Info("cookie login successful", slog.String("email", usr.Email))
-
-		c.Set("email", usr.Email)
-
-		c.Next()
-	}, delete.New(log, service, cfg.RWTimeout))
+	router.GET("/events/:event_id/enroll", auth.New(log, service, cfg.RWTimeout), createEnrollment.New(log, service, cfg.RWTimeout))
+	router.DELETE("/events/:event_id", auth.New(log, service, cfg.RWTimeout), delete.New(log, service, cfg.RWTimeout))
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

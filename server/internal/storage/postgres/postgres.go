@@ -301,6 +301,45 @@ func (s *Storage) GetAllEvents(ctx context.Context, limit, offset *int, eventTyp
 	return events, nil
 }
 
+func (s *Storage) SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error) {
+	const op = "storage.postgres.SubscribeToEvent"
+
+	var id uuid.UUID
+
+	tx, err := s.conn.Begin(ctx)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	query := `
+	INSERT INTO enrollments(user_email, event_id)
+	VALUES ($1, $2)
+	RETURNING id
+	`
+
+	err = tx.QueryRow(ctx, query, email, eventId).Scan(&id)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	query = `
+	UPDATE events
+	SET available_seats = available_seats - 1
+	WHERE id = $1
+	`
+
+	_, err = tx.Exec(ctx, query, eventId)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return uuid.UUID{}, fmt.Errorf("%s: failed to commit transaction: %v", op, err)
+	}
+
+	return id, nil
+}
+
 func parseWKT(wkt string) (orb.Point, error) {
 	// fmt.Println(wkt)
 	parts := strings.Fields(strings.TrimPrefix(strings.TrimSuffix(wkt, ")"), "POINT("))

@@ -32,6 +32,7 @@ type EventRepository interface {
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 	GetEvent(ctx context.Context, id uuid.UUID) (event.Event, error)
 	GetAllEvents(ctx context.Context, limit, offset *int, eventType *int, creatorEmail *string, before, after *time.Time, location *orb.Point, radius *float64, visitorEmail *string) ([]event.Event, error)
+	SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error)
 }
 
 var (
@@ -253,6 +254,40 @@ func (s *Service) GetAllEvents(
 	}
 
 	return events, nil
+}
+
+func (s *Service) SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error) {
+	var id uuid.UUID
+
+	log := s.log.With(
+		slog.String("event_id", eventId.String()),
+		slog.String("email", email),
+	)
+
+	_, err := s.usrRepo.GetUser(ctx, email)
+	if err != nil {
+		log.Error("error retrieving user", slog.String("err", err.Error()))
+		return uuid.UUID{}, fmt.Errorf("error retrieving user")
+	}
+
+	evt, err := s.evtRepo.GetEvent(ctx, eventId)
+	if err != nil {
+		log.Error("error retrieving event", slog.String("err", err.Error()))
+		return uuid.UUID{}, fmt.Errorf("error retrieving event")
+	}
+
+	if evt.AvailableSeats < 1 {
+		log.Error("not enough free spaces on the event")
+		return uuid.UUID{}, fmt.Errorf("not enough free spaces on the event")
+	}
+
+	id, err = s.evtRepo.SubscribeToEvent(ctx, eventId, email)
+	if err != nil {
+		log.Error("error making an appointment", slog.String("err", err.Error()))
+		return uuid.UUID{}, fmt.Errorf("error making an appointment")
+	}
+
+	return id, nil
 }
 
 func hashPassword(password string) (string, error) {

@@ -32,6 +32,7 @@ func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *
 		if !ok {
 			log.Error("email does not exist on the context")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email does not exist on the context"})
+			return
 		}
 
 		err = service.DeleteEvent(context.WithValue(ctx, "email", email), eventID)
