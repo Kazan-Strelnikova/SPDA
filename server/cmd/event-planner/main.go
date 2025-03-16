@@ -56,6 +56,8 @@ func main() {
 	router.POST("/users/signin", login.New(log, service, cfg.RWTimeout))
 	router.GET("/users/signin/cookie", tokenlogin.New(log, service, cfg.RWTimeout))
 
+	//TODO:
+	// add login middleware and compare emails
 	router.POST("/events", create.New(log, service, cfg.RWTimeout))
 	router.GET("/events", getall.New(log, service, cfg.RWTimeout))
 	router.GET("/events/:event_id", get.New(log, service, cfg.RWTimeout))
