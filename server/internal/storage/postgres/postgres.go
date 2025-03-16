@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/enrollment"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/event"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/user"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage"
@@ -338,6 +339,59 @@ func (s *Storage) SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email
 	}
 
 	return id, nil
+}
+
+func (s *Storage) GetEventSubscription(ctx context.Context, enrollmentEventId uuid.UUID, email string) (enrollment.Enrollment, error) {
+	const op = "storage.postgres.GetEventSubscription"
+
+	var enrlmnt enrollment.Enrollment
+
+	query := `
+	SELECT id, created_at, user_email, event_id
+	FROM enrollments
+	WHERE user_email = $1 AND event_id = $2
+	`
+
+	var enrlmntId, eventId string
+
+	err := s.conn.QueryRow(ctx, query, email, enrollmentEventId).Scan(
+		&enrlmntId,
+		&enrlmnt.CreatedAt,
+		&enrlmnt.UserEmail,
+		&eventId,
+	)
+
+	if err != nil {
+		return enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	enrlmnt.Id, err = uuid.Parse(enrlmntId)
+	if err != nil {
+		return enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	enrlmnt.EventId, err = uuid.Parse(eventId)
+	if err != nil {
+		return enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	return enrlmnt, nil
+}
+
+func (s *Storage) UnsubscribeFromEvent(ctx context.Context, enrollmentId uuid.UUID) error {
+	const op = "storage.postgres.UnsibscribeFromEvent"
+
+	query := `
+	DELETE FROM enrollments
+	WHERE id=$1
+	`
+
+	_, err := s.conn.Exec(ctx, query, enrollmentId)
+	if err != nil {
+		return fmt.Errorf("op: %s, err: %v", op, err)
+	}
+	
+	return nil
 }
 
 func parseWKT(wkt string) (orb.Point, error) {

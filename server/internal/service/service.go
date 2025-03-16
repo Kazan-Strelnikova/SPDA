@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/enrollment"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/event"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/user"
 	"github.com/golang-jwt/jwt/v5"
@@ -33,6 +34,8 @@ type EventRepository interface {
 	GetEvent(ctx context.Context, id uuid.UUID) (event.Event, error)
 	GetAllEvents(ctx context.Context, limit, offset *int, eventType *int, creatorEmail *string, before, after *time.Time, location *orb.Point, radius *float64, visitorEmail *string) ([]event.Event, error)
 	SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error)
+	UnsubscribeFromEvent(ctx context.Context, enrollmentId uuid.UUID) error
+	GetEventSubscription(ctx context.Context, enrollmentId uuid.UUID, email string) (enrollment.Enrollment, error)
 }
 
 var (
@@ -257,11 +260,14 @@ func (s *Service) GetAllEvents(
 }
 
 func (s *Service) SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error) {
+	const op = "service.SubscribeToEvent"
+
 	var id uuid.UUID
 
 	log := s.log.With(
 		slog.String("event_id", eventId.String()),
 		slog.String("email", email),
+		slog.String("op", op),
 	)
 
 	_, err := s.usrRepo.GetUser(ctx, email)
@@ -288,6 +294,30 @@ func (s *Service) SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email
 	}
 
 	return id, nil
+}
+
+func (s *Service) UnsibscribeFromEvent(ctx context.Context, eventId uuid.UUID, email string) error {
+	const op = "service.UnsibscribeFromEvent"
+
+	log := s.log.With(
+		slog.String("email", email),
+		slog.String("event_id", eventId.String()),
+		slog.String("op", op),
+	)
+
+	enrlmnt, err := s.evtRepo.GetEventSubscription(ctx, eventId, email)
+	if err != nil {
+		log.Error("error accessing event enrollment", slog.String("err", err.Error()))
+		return fmt.Errorf("error accessing event enrollment")
+	}
+
+	err = s.evtRepo.UnsubscribeFromEvent(ctx, enrlmnt.Id)
+	if err != nil {
+		log.Error("error deleting enrollment", slog.Any("enrollment", enrlmnt))
+		return fmt.Errorf("error deleting enrollment")
+	}
+
+	return nil
 }
 
 func hashPassword(password string) (string, error) {

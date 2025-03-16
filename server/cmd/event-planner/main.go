@@ -12,6 +12,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/config"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/create"
 	createEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/create"
+	deleteEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/get"
 	getall "github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/getAll"
@@ -57,7 +58,8 @@ func main() {
 	router.POST("/events", create.New(log, service, cfg.RWTimeout))
 	router.GET("/events", getall.New(log, service, cfg.RWTimeout))
 	router.GET("/events/:event_id", get.New(log, service, cfg.RWTimeout))
-	router.GET("/events/:event_id/enroll", auth.New(log, service, cfg.RWTimeout), createEnrollment.New(log, service, cfg.RWTimeout))
+	router.POST("/events/:event_id/enrollment", auth.New(log, service, cfg.RWTimeout), createEnrollment.New(log, service, cfg.RWTimeout))
+	router.DELETE("/events/:event_id/enrollment", auth.New(log, service, cfg.RWTimeout), deleteEnrollment.New(log, service, cfg.RWTimeout))
 	router.DELETE("/events/:event_id", auth.New(log, service, cfg.RWTimeout), delete.New(log, service, cfg.RWTimeout))
 
 	done := make(chan os.Signal, 1)

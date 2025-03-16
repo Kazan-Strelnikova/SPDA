@@ -1,4 +1,4 @@
-package create
+package delete
 
 import (
 	"context"
@@ -10,15 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type AppointmentService interface {
-	SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error)
+type EventService interface {
+	UnsibscribeFromEvent(ctx context.Context, eventId uuid.UUID, email string) error
 }
 
-
-
-func New(log *slog.Logger, service AppointmentService, timeout time.Duration) func(c *gin.Context) {
+func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		log.Info("create appointment request")
+		log.Info("delete appointment request")
 
 		emailAny, ok := c.Get("email")
 		if !ok {
@@ -44,15 +42,15 @@ func New(log *slog.Logger, service AppointmentService, timeout time.Duration) fu
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer cancel()
 
-		id, err := service.SubscribeToEvent(ctx, eventId, email)
+		err = service.UnsibscribeFromEvent(ctx, eventId, email)
 		if err != nil {
-			log.Error("Could not subscribe to event")
+			log.Error("Could not unsubscribe from event")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "could not subscribe to event"})
 			return
 		}
 
-		log.Info("create appointment request succeeded")
+		log.Info("delete appointment request succeeded")
 
-		c.JSON(http.StatusCreated, gin.H{"id": id})
+		c.Status(http.StatusNoContent)
 	}
 }
