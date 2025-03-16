@@ -36,6 +36,7 @@ func main() {
 	log.Info("connecting to database")
 
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+	log.Debug("connection info", slog.String("db url", dbURL))
 	storage := postgres.New(context.Background(), dbURL)
 	defer storage.Close()
 
