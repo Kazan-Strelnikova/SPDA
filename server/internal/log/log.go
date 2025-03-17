@@ -2,6 +2,7 @@ package log
 
 import (
 	"log/slog"
+	"net"
 	"os"
 
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/log/pretty"
@@ -13,15 +14,25 @@ const (
 	envProd  = "prod"
 )
 
-func SetupLogger(env string) *slog.Logger {
+func SetupLogger(env, host, port string) *slog.Logger {
 	var log *slog.Logger
 	switch env {
 	case envLocal:
 		log = setupPrettySlog()
 	case envDev:
-		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		conn, err := net.Dial("tcp", host + ":" + port)
+		if err != nil {
+			log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		} else {
+			log = slog.New(slog.NewJSONHandler(conn, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		}
 	case envProd:
-		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+		conn, err := net.Dial("tcp", host + ":" + port)
+		if err != nil {
+			log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		} else {
+			log = slog.New(slog.NewJSONHandler(conn, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		}
 	}
 	return log
 }

@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/config"
-	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/create"
 	createEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/create"
 	deleteEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/delete"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/create"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/get"
 	getall "github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/getAll"
@@ -31,7 +31,7 @@ func main() {
 
 	cfg := config.LoadConfig()
 
-	log := log.SetupLogger(cfg.Env)
+	log := log.SetupLogger(cfg.Env, cfg.LogHost, cfg.LogPort)
 
 	log.Info("connecting to database")
 

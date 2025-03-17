@@ -18,6 +18,8 @@ type Config struct {
 	Env         string
 	RWTimeout   time.Duration
 	IdleTimeout time.Duration
+	LogHost		string
+	LogPort		string
 }
 
 func LoadConfig() *Config {
@@ -45,6 +47,8 @@ func LoadConfig() *Config {
 		RWTimeout:   rwTimeout,
 		IdleTimeout: idleTimeout,
 		Env:         getEnv("ENV", "local"),
+		LogHost:  	 getEnv("LOGSTASH_HOST", "logstash"),
+		LogPort:  	 getEnv("LOGSTASH_PORT", "5044"),
 	}
 	return config
 }

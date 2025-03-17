@@ -12,18 +12,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    # volumes:
-    #   - postgres_data:/var/lib/postgresql/data
     networks:
       - private_network
 
-# volumes:
-#   postgres_data:
   app:
     build: .
     container_name: event_planner_app
     depends_on:
       postgres:
+        condition: service_healthy
+      logstash:
         condition: service_healthy
     env_file:
       - .env
@@ -31,7 +29,75 @@ services:
       - "8080:${SERVER_PORT}"
     networks:
       - private_network
+      - elk_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  elasticsearch:
+    image: elasticsearch:8.10.2
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - test_data:/usr/share/elasticsearch/data/
+      - ./elk-config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - transport.host=0.0.0.0
+      - xpack.security.enabled=false
+      - cluster.name=elasticsearch
+      - bootstrap.memory_lock=true
+    networks:
+      - elk_network
+
+
+  logstash:
+    image: logstash:8.10.2
+    container_name: logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./elk-config/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./elk-config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ls_data:/usr/share/logstash/data
+
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk_network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9600/_node/stats || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kibana:
+    image: kibana:8.10.2
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./elk-config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - kb_data:/usr/share/kibana/data
+    networks:
+      - elk_network
+    depends_on:
+      - elasticsearch
+
 
 networks:
   private_network:
     driver: bridge
+  elk_network:
+    driver: bridge
+
+volumes:
+  test_data:
+  ls_data:
+  kb_data:
