@@ -1,2 +1,4 @@
+xpack.security.enabled: true
+
 cluster.name: "elasticsearch"
 network.host: 0.0.0.0

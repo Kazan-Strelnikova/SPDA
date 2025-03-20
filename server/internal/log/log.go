@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io"
 	"log/slog"
 	"net"
 	"os"
@@ -20,19 +21,24 @@ func SetupLogger(env, host, port string) *slog.Logger {
 	case envLocal:
 		log = setupPrettySlog()
 	case envDev:
+		var w io.Writer
 		conn, err := net.Dial("tcp", host + ":" + port)
 		if err != nil {
-			log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+			w = os.Stdout
 		} else {
-			log = slog.New(slog.NewJSONHandler(conn, &slog.HandlerOptions{Level: slog.LevelDebug}))
+			w = conn
 		}
+		log = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		
 	case envProd:
+		var w io.Writer
 		conn, err := net.Dial("tcp", host + ":" + port)
 		if err != nil {
-			log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+			w = os.Stdout
 		} else {
-			log = slog.New(slog.NewJSONHandler(conn, &slog.HandlerOptions{Level: slog.LevelDebug}))
+			w = conn
 		}
+		log = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
 	return log
 }

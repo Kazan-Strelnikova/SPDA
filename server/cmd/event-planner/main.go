@@ -25,6 +25,8 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/service"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/postgres"
 	"github.com/gin-gonic/gin"
+	"go.elastic.co/apm/module/apmgin/v2"
+	"go.elastic.co/apm/v2"
 )
 
 func main() {
@@ -47,8 +49,18 @@ func main() {
 	service := service.New(log, storage, storage, "filler_secret")
 
 	router := gin.Default()
-	// TODO:
-	// router.SetTrustedProxies()
+	
+	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
+		ServiceName: "Event-planner",
+		ServiceVersion: "1.0",
+	})
+
+	if err == nil {
+		router.Use(apmgin.Middleware(router, apmgin.WithTracer(tracer)))
+	} else {
+		log.Warn("tracer initialization error", slog.String("err", err.Error()))
+	}
+
 
 	router.GET("/ping", ping.New(log))
 
