@@ -1,0 +1,420 @@
+openapi: 3.0.3
+info:
+  title: Event Planner API
+  version: 1.0.0
+  description: API for managing events and user registrations.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /ping:
+    get:
+      summary: Health check endpoint
+      description: Returns the server status.
+      responses:
+        "200":
+          description: Server is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "up"
+        "500":
+          description: Server error
+
+  /users/signup:
+    post:
+      summary: User registration
+      description: Registers a new user and sets an authentication cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - last_name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  example: "John"
+                last_name:
+                  type: string
+                  minLength: 2
+                  example: "Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "apt@gmail.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "4828111246"
+      responses:
+        "201":
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "John"
+                      last_name:
+                        type: string
+                        example: "Doe"
+                      email:
+                        type: string
+                        example: "apt@gmail.com"
+                      password:
+                        type: string
+                        example: ""
+        "400":
+          description: Invalid request format or validation failure
+        "500":
+          description: Registration failed
+
+  /users/signin:
+    post:
+      summary: User login
+      description: Authenticates a user and returns a session cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "justcoolestgiraffe9@gmail.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "4828111246"
+      responses:
+        "200":
+          description: Login successful, session cookie set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "Alisher"
+                      last_name:
+                        type: string
+                        example: "Kabardiyadi"
+                      email:
+                        type: string
+                        example: "justcoolestgiraffe9@gmail.com"
+                      password:
+                        type: string
+                        example: ""
+        "400":
+          description: Invalid request format
+        "401":
+          description: Invalid credentials
+
+  /users/signin/cookie:
+    get:
+      summary: Login with authentication cookie
+      description: Authenticates a user using a session token stored in a cookie.
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "Alisher"
+                      last_name:
+                        type: string
+                        example: "Kabardiyadi"
+                      email:
+                        type: string
+                        example: "justcoolestgiraffe9@gmail.com"
+                      password:
+                        type: string
+                        example: ""
+        "401":
+          description: Authentication required or invalid token
+
+  /events:
+    post:
+      summary: Create a new event
+      description: Creates a new event with a given title, type, date, location, and optional description.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - type
+                - date
+                - total_seats
+                - creator_email
+                - location
+              properties:
+                title:
+                  type: string
+                  example: "Tech Conference 2025"
+                type:
+                  type: integer
+                  example: 1
+                date:
+                  type: string
+                  format: date-time
+                  example: "2025-05-15T09:00:00Z"
+                total_seats:
+                  type: integer
+                  minimum: 1
+                  example: 200
+                creator_email:
+                  type: string
+                  format: email
+                  example: "kirastr354@gmail.com"
+                location:
+                  type: object
+                  required:
+                    - latitude
+                    - longitude
+                  properties:
+                    latitude:
+                      type: string
+                      example: "40.7128"
+                    longitude:
+                      type: string
+                      example: "-74.0060"
+                description:
+                  type: string
+                  nullable: true
+                  example: "A conference on the latest in tech and innovation."
+      responses:
+        "200":
+          description: Event created successfully
+
+    get:
+      summary: List all events
+      description: Retrieves a list of all events.
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: integer
+          description: Filter by event type
+        - name: date_after
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter events occurring after this date
+        - name: date_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter events occurring before this date
+        - name: creator_email
+          in: query
+          schema:
+            type: string
+            format: email
+          description: Filter by creator email
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of events per page
+      responses:
+        "200":
+          description: A list of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "a1b2c3d4"
+                    title:
+                      type: string
+                      example: "Tech Conference 2025"
+                    type:
+                      type: integer
+                      example: 1
+                    date:
+                      type: string
+                      format: date-time
+                      example: "2025-05-15T09:00:00Z"
+                    total_seats:
+                      type: integer
+                      example: 200
+                    creator_email:
+                      type: string
+                      format: email
+                      example: "kirastr354@gmail.com"
+                    location:
+                      type: object
+                      properties:
+                        latitude:
+                          type: string
+                          example: "40.7128"
+                        longitude:
+                          type: string
+                          example: "-74.0060"
+                    description:
+                      type: string
+                      example: "A conference on the latest in tech and innovation."
+  /events/{id}:
+      get:
+        summary: Get event by ID
+        description: Retrieves event details by event ID.
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+            description: Unique identifier for the event
+        responses:
+          "200":
+            description: Event details retrieved successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "a1b2c3d4"
+                    title:
+                      type: string
+                      example: "Tech Conference 2025"
+                    type:
+                      type: integer
+                      example: 1
+                    date:
+                      type: string
+                      format: date-time
+                      example: "2025-05-15T09:00:00Z"
+                    total_seats:
+                      type: integer
+                      example: 200
+                    creator_email:
+                      type: string
+                      format: email
+                      example: "kirastr354@gmail.com"
+                    location:
+                      type: object
+                      properties:
+                        latitude:
+                          type: string
+                          example: "40.7128"
+                        longitude:
+                          type: string
+                          example: "-74.0060"
+                    description:
+                      type: string
+                      example: "A conference on the latest in tech and innovation."
+          "404":
+            description: Event not found
+      delete:
+        summary: Delete an event by ID
+        description: Cancel the event that was planned
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+              description: Unique identifier for the event
+        responses:
+          "204":
+            description: Event deleted successfully
+          "401":
+            description: User is not authorized
+          "404":
+            description: The event is not found (по секрету, если ты пытаешься удалить ивент, который не ты создал - тоже эта ошибка)
+
+  /events/{id}/enrollment:
+      post:
+        summary: Create an enrollment
+        description: Registers user to some event by user's email and event's ID
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+            description: Unique identifier for the event
+        responses:
+          "200":
+            description: Event details retrieved successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "a1b2c3d4"
+          "400":
+            description: If the event id is absent, incorrect, of the user is already signed up for this event
+          "401":
+            description: User is not authorized
+      delete:
+        summary: Delete an Enrollment
+        description: Cancel user's registration to an event
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+              description: Unique identifier for the event
+        responses:
+          "204":
+            description: Enrollment deleted successfully
+          "401":
+            description: User is not authorized
+          "404":
+            description: The event is not found (по секрету, если ты пытаешься удалить ивент, который не ты создал - тоже эта ошибка)

@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/config"
-	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/create"
 	createEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/create"
 	deleteEnrollment "github.com/Kazan-Strelnikova/SPDA/server/internal/http/enrollments/delete"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/create"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/get"
 	getall "github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/getAll"
@@ -25,13 +25,15 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/service"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/postgres"
 	"github.com/gin-gonic/gin"
+	"go.elastic.co/apm/module/apmgin/v2"
+	"go.elastic.co/apm/v2"
 )
 
 func main() {
 
 	cfg := config.LoadConfig()
 
-	log := log.SetupLogger(cfg.Env)
+	log := log.SetupLogger(cfg.Env, cfg.LogHost, cfg.LogPort)
 
 	log.Info("connecting to database")
 
@@ -47,8 +49,18 @@ func main() {
 	service := service.New(log, storage, storage, "filler_secret")
 
 	router := gin.Default()
-	// TODO:
-	// router.SetTrustedProxies()
+	
+	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
+		ServiceName: "Event-planner",
+		ServiceVersion: "1.0",
+	})
+
+	if err == nil {
+		router.Use(apmgin.Middleware(router, apmgin.WithTracer(tracer)))
+	} else {
+		log.Warn("tracer initialization error", slog.String("err", err.Error()))
+	}
+
 
 	router.GET("/ping", ping.New(log))
 
@@ -56,6 +68,8 @@ func main() {
 	router.POST("/users/signin", login.New(log, service, cfg.RWTimeout))
 	router.GET("/users/signin/cookie", tokenlogin.New(log, service, cfg.RWTimeout))
 
+	//TODO:
+	// add login middleware and compare emails
 	router.POST("/events", create.New(log, service, cfg.RWTimeout))
 	router.GET("/events", getall.New(log, service, cfg.RWTimeout))
 	router.GET("/events/:event_id", get.New(log, service, cfg.RWTimeout))

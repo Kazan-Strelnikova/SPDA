@@ -1,0 +1,15 @@
+xpack.apm.enabled: true
+xpack.apm.ui.enabled: true
+xpack.apm.indices.transaction: "traces-apm*"
+xpack.apm.indices.error: "logs-apm.error*"
+xpack.apm.indices.metric: "metrics-apm*"
+xpack.apm.indices.span: "traces-apm*"
+xpack.encryptedSavedObjects.encryptionKey: "${KIBANA_ENCRYPTION_KEY}"
+
+server.name: kibana
+server.host: "0.0.0.0"
+server.port: 5601
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+elasticsearch.username: "${KIBANA_USER}"
+elasticsearch.password: "${KIBANA_PASSWORD}"
+monitoring.ui.container.elasticsearch.enabled: true

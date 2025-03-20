@@ -45,7 +45,7 @@ func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *
 		err = service.UnsibscribeFromEvent(ctx, eventId, email)
 		if err != nil {
 			log.Error("Could not unsubscribe from event")
-			c.JSON(http.StatusBadRequest, gin.H{"error": "could not subscribe to event"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "could not Unsubscribe from event"})
 			return
 		}
 
