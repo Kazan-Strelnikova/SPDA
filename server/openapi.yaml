@@ -357,3 +357,64 @@ paths:
                       example: "A conference on the latest in tech and innovation."
           "404":
             description: Event not found
+      delete:
+        summary: Delete an event by ID
+        description: Cancel the event that was planned
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+              description: Unique identifier for the event
+        responses:
+          "204":
+            description: Event deleted successfully
+          "401":
+            description: User is not authorized
+          "404":
+            description: The event is not found (по секрету, если ты пытаешься удалить ивент, который не ты создал - тоже эта ошибка)
+
+  /events/{id}/enrollment:
+      post:
+        summary: Create an enrollment
+        description: Registers user to some event by user's email and event's ID
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+            description: Unique identifier for the event
+        responses:
+          "200":
+            description: Event details retrieved successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "a1b2c3d4"
+          "400":
+            description: If the event id is absent, incorrect, of the user is already signed up for this event
+          "401":
+            description: User is not authorized
+      delete:
+        summary: Delete an Enrollment
+        description: Cancel user's registration to an event
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+              description: Unique identifier for the event
+        responses:
+          "204":
+            description: Enrollment deleted successfully
+          "401":
+            description: User is not authorized
+          "404":
+            description: The event is not found (по секрету, если ты пытаешься удалить ивент, который не ты создал - тоже эта ошибка)
