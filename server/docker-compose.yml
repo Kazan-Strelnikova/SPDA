@@ -21,8 +21,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      logstash:
-        condition: service_healthy
+      # logstash:
+      #   condition: service_healthy
     env_file:
       - .env
     ports:

@@ -17,16 +17,17 @@ type EventService interface {
 }
 
 type CreateEventRequest struct {
-	Title        string `json:"title" binding:"required" validate:"required"`
-	Type         int    `json:"type" binding:"required" validate:"required"`
-	Date         string `json:"date" binding:"required" validate:"required"`
-	TotalSeats   int    `json:"total_seats" binding:"required,min=1" validate:"required,min=1"`
-	CreatorEmail string `json:"creator_email" binding:"required,email" validate:"required,email"`
-	Location     struct {
-		Latitude  string `json:"latitude" binding:"required" validate:"required"`
-		Longitude string `json:"longitude" binding:"required" validate:"required"`
-	} `json:"location" binding:"required" validate:"required"`
-	Description *string `json:"description,omitempty"`
+	Title        		string `json:"title" binding:"required" validate:"required"`
+	Type         		int    `json:"type" binding:"required" validate:"required"`
+	Date         		string `json:"date" binding:"required" validate:"required"`
+	TotalSeats   		int    `json:"total_seats" binding:"required,min=1" validate:"required,min=1"`
+	CreatorEmail 		string `json:"creator_email" binding:"required,email" validate:"required,email"`
+	Location     		struct {
+							Latitude  string `json:"latitude" binding:"required" validate:"required"`
+							Longitude string `json:"longitude" binding:"required" validate:"required"`
+						} `json:"location" binding:"required" validate:"required"`
+	HasUnlimitedSeats 	string	`json:"has_unlimited_seats" validate:"required,oneofci='true' 'false'"`
+	Description 		*string `json:"description,omitempty"`
 }
 
 func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *gin.Context) {
@@ -72,6 +73,7 @@ func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *
 			AvailableSeats: req.TotalSeats,
 			CreatorEmail:   req.CreatorEmail,
 			Location:       location,
+			HasUnlimitedSeats: req.HasUnlimitedSeats,
 			Description:    req.Description,
 		}
 
