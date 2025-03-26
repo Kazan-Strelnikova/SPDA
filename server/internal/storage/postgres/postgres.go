@@ -146,6 +146,47 @@ func (s *Storage) InsertEvent(ctx context.Context, evt *event.Event) error {
 	return nil
 }
 
+func (s *Storage) UpdateEvent(ctx context.Context, evt event.Event) error {
+	const op = "storage.postgres.UpdateEvent"
+
+	query := `
+	UPDATE events
+	SET title = $2,
+	type = $3,
+	date = $4,
+	total_seats = $5,
+	available_seats = $10,
+	creator_email = $6,
+	location = ST_GeomFromText($7, 4326),
+	has_unlimited_seats = $8,
+	description = $9
+	WHERE id = $1
+	`
+
+	commandTag, err := s.conn.Exec(ctx, query,
+		evt.ID.String(),
+		evt.Title,
+		evt.Type,
+		evt.Date,
+		evt.TotalSeats,
+		evt.CreatorEmail,
+		fmt.Sprintf("POINT(%f %f)", evt.Location.Lon(), evt.Location.Lat()),
+		evt.HasUnlimitedSeats,
+		evt.Description,
+		evt.AvailableSeats,
+	)
+
+	if err != nil {
+		return fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	if commandTag.RowsAffected() <= 0 {
+		return storage.ErrorEventNotFound
+	}
+
+	return nil
+}
+
 func (s *Storage) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	const op = "storage.postgres.DeleteEvent"
 
@@ -416,8 +457,55 @@ func (s *Storage) UnsubscribeFromEvent(ctx context.Context, enrollmentId uuid.UU
 	if err != nil {
 		return fmt.Errorf("op: %s, err: %v", op, err)
 	}
-	
+
 	return nil
+}
+
+func (s *Storage) GetAllSubscriptions(ctx context.Context, eventId uuid.UUID) ([]enrollment.Enrollment, error) {
+	const op = "storage.postgres.GetAllSubscriptions"
+
+	var enrollments []enrollment.Enrollment
+
+	query := `
+	SELECT id, created_at, user_email
+	FROM enrollments
+	WHERE event_id = $1
+	`
+
+	rows, err := s.conn.Query(ctx, query, eventId.String())
+	if err != nil {
+
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return []enrollment.Enrollment{}, nil
+		}
+
+		return []enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	for rows.Next() {
+		var enrllmnt enrollment.Enrollment
+		var idString string
+
+		err = rows.Scan(
+			&idString,
+			&enrllmnt.CreatedAt,
+			&enrllmnt.UserEmail,
+		)
+
+		if err != nil {
+			return []enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+		}
+
+		enrllmnt.EventId = eventId
+		enrllmnt.Id, err = uuid.Parse(idString)
+		if err != nil {
+			return []enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+		}
+
+		enrollments = append(enrollments, enrllmnt)
+	}
+
+	return enrollments, nil
 }
 
 func parseWKT(wkt string) (orb.Point, error) {

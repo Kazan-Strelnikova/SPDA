@@ -1,19 +1,21 @@
-package create
+package put
 
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/event"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 )
 
 type EventService interface {
-	CreateEvent(ctx context.Context, evt event.Event) (event.Event, error)
+	UpdateEvent(ctx context.Context, evt event.Event) error
 }
 
 type CreateEventRequest struct {
@@ -34,6 +36,14 @@ func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *
 	validate := validator.New()
 	return func(c *gin.Context) {
 		var req CreateEventRequest
+
+		eventIDStr := c.Param("event_id")
+		eventID, err := uuid.Parse(eventIDStr)
+		if err != nil {
+			log.Error("invalid event ID", slog.String("event_id", eventIDStr), slog.String("error", err.Error()))
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid event ID"})
+			return
+		}
 
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(400, gin.H{"error": "Invalid request data", "details": err.Error()})
@@ -66,6 +76,7 @@ func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *
 		}
 
 		evt := event.Event{
+			ID:                eventID,
 			Title:             req.Title,
 			Type:              req.Type,
 			Date:              eventDate,
@@ -80,12 +91,12 @@ func New(log *slog.Logger, service EventService, timeout time.Duration) func(c *
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer cancel()
 
-		createdEvent, err := service.CreateEvent(ctx, evt)
+		err = service.UpdateEvent(ctx, evt)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Error creating event", "details": err.Error()})
+			c.JSON(422, gin.H{"error": "Error creating event", "details": err.Error()})
 			return
 		}
 
-		c.JSON(200, createdEvent)
+		c.JSON(200, evt)
 	}
 }
