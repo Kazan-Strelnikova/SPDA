@@ -22,17 +22,17 @@ func SetupLogger(env, host, port string) *slog.Logger {
 		log = setupPrettySlog()
 	case envDev:
 		var w io.Writer
-		conn, err := net.Dial("tcp", host + ":" + port)
+		conn, err := net.Dial("tcp", host+":"+port)
 		if err != nil {
 			w = os.Stdout
 		} else {
 			w = conn
 		}
 		log = slog.New(slog.NewJSONHandler(w, &slog.HandlerOptions{Level: slog.LevelDebug}))
-		
+
 	case envProd:
 		var w io.Writer
-		conn, err := net.Dial("tcp", host + ":" + port)
+		conn, err := net.Dial("tcp", host+":"+port)
 		if err != nil {
 			w = os.Stdout
 		} else {

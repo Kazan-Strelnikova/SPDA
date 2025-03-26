@@ -16,6 +16,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/get"
 	getall "github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/getAll"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/put"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/middleware/auth"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/ping"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/login"
@@ -46,12 +47,12 @@ func main() {
 
 	//TODO:
 	//Move the secret out
-	service := service.New(log, storage, storage, "filler_secret")
+	service := service.New(log, storage, storage, cfg.JWTSecret, cfg.SMTPConfig)
 
 	router := gin.Default()
-	
+
 	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
-		ServiceName: "Event-planner",
+		ServiceName:    "Event-planner",
 		ServiceVersion: "1.0",
 	})
 
@@ -60,7 +61,6 @@ func main() {
 	} else {
 		log.Warn("tracer initialization error", slog.String("err", err.Error()))
 	}
-
 
 	router.GET("/ping", ping.New(log))
 
@@ -73,6 +73,7 @@ func main() {
 	router.POST("/events", create.New(log, service, cfg.RWTimeout))
 	router.GET("/events", getall.New(log, service, cfg.RWTimeout))
 	router.GET("/events/:event_id", get.New(log, service, cfg.RWTimeout))
+	router.PUT("/events/:event_id", put.New(log, service, cfg.RWTimeout))
 	router.POST("/events/:event_id/enrollment", auth.New(log, service, cfg.RWTimeout), createEnrollment.New(log, service, cfg.RWTimeout))
 	router.DELETE("/events/:event_id/enrollment", auth.New(log, service, cfg.RWTimeout), deleteEnrollment.New(log, service, cfg.RWTimeout))
 	router.DELETE("/events/:event_id", auth.New(log, service, cfg.RWTimeout), delete.New(log, service, cfg.RWTimeout))

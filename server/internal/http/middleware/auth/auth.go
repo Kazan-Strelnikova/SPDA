@@ -15,7 +15,7 @@ type AuthService interface {
 }
 
 func New(log *slog.Logger, service AuthService, timeout time.Duration) func(c *gin.Context) {
-	return func (c *gin.Context) {
+	return func(c *gin.Context) {
 		log.Info("attempt of cookie login through middleware")
 
 		token, err := c.Cookie("token")

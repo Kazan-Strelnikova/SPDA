@@ -14,8 +14,6 @@ type AppointmentService interface {
 	SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email string) (uuid.UUID, error)
 }
 
-
-
 func New(log *slog.Logger, service AppointmentService, timeout time.Duration) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		log.Info("create appointment request")

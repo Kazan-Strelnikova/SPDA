@@ -7,8 +7,8 @@ import (
 )
 
 type Enrollment struct {
-	Id 			uuid.UUID
-	CreatedAt	time.Time
-	UserEmail 	string
-	EventId 	uuid.UUID
+	Id        uuid.UUID
+	CreatedAt time.Time
+	UserEmail string
+	EventId   uuid.UUID
 }

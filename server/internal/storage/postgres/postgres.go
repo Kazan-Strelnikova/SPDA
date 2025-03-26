@@ -115,8 +115,8 @@ func (s *Storage) InsertEvent(ctx context.Context, evt *event.Event) error {
 	const op = "storage.postgres.InsertEvent"
 
 	query := `
-	INSERT INTO events (title, type, date, total_seats, available_seats, creator_email, location, description)
-	VALUES ($1, $2, $3, $4, $5, $6, ST_GeomFromText($7, 4326), $8)
+	INSERT INTO events (title, type, date, total_seats, available_seats, creator_email, location, has_unlimited_seats, description)
+	VALUES ($1, $2, $3, $4, $5, $6, ST_GeomFromText($7, 4326), $8, $9)
 	RETURNING id
 	`
 
@@ -128,6 +128,7 @@ func (s *Storage) InsertEvent(ctx context.Context, evt *event.Event) error {
 		evt.AvailableSeats,
 		evt.CreatorEmail,
 		fmt.Sprintf("POINT(%f %f)", evt.Location.Lon(), evt.Location.Lat()),
+		evt.HasUnlimitedSeats,
 		evt.Description,
 	).Scan(&evt.ID)
 
@@ -140,6 +141,47 @@ func (s *Storage) InsertEvent(ctx context.Context, evt *event.Event) error {
 		}
 
 		return fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) UpdateEvent(ctx context.Context, evt event.Event) error {
+	const op = "storage.postgres.UpdateEvent"
+
+	query := `
+	UPDATE events
+	SET title = $2,
+	type = $3,
+	date = $4,
+	total_seats = $5,
+	available_seats = $10,
+	creator_email = $6,
+	location = ST_GeomFromText($7, 4326),
+	has_unlimited_seats = $8,
+	description = $9
+	WHERE id = $1
+	`
+
+	commandTag, err := s.conn.Exec(ctx, query,
+		evt.ID.String(),
+		evt.Title,
+		evt.Type,
+		evt.Date,
+		evt.TotalSeats,
+		evt.CreatorEmail,
+		fmt.Sprintf("POINT(%f %f)", evt.Location.Lon(), evt.Location.Lat()),
+		evt.HasUnlimitedSeats,
+		evt.Description,
+		evt.AvailableSeats,
+	)
+
+	if err != nil {
+		return fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	if commandTag.RowsAffected() <= 0 {
+		return storage.ErrorEventNotFound
 	}
 
 	return nil
@@ -167,10 +209,11 @@ func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (event.Event, erro
 
 	var ev event.Event
 	var locationWKT string
+	var hasUnlimitedSeats bool
 
 	query := `
 	SELECT id, title, type, date, total_seats, available_seats, creator_email, 
-	       ST_AsText(location), description
+	       ST_AsText(location), has_unlimited_seats, description
 	FROM events
 	WHERE id = $1
 	`
@@ -184,8 +227,15 @@ func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (event.Event, erro
 		&ev.AvailableSeats,
 		&ev.CreatorEmail,
 		&locationWKT,
+		&hasUnlimitedSeats,
 		&ev.Description,
 	)
+
+	if hasUnlimitedSeats {
+		ev.HasUnlimitedSeats = "true"
+	} else {
+		ev.HasUnlimitedSeats = "false"
+	}
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -208,7 +258,7 @@ func (s *Storage) GetAllEvents(ctx context.Context, limit, offset *int, eventTyp
 	var events = []event.Event{}
 
 	query := `
-	SELECT e.id, e.title, e.type, e.date, e.total_seats, e.available_seats, e.creator_email, ST_AsText(e.location), e.description
+	SELECT e.id, e.title, e.type, e.date, e.total_seats, e.available_seats, e.creator_email, ST_AsText(e.location), e.has_unlimited_seats, e.description
 	FROM events e
 	`
 
@@ -274,6 +324,7 @@ func (s *Storage) GetAllEvents(ctx context.Context, limit, offset *int, eventTyp
 	for rows.Next() {
 		var ev event.Event
 		var locationWKT string
+		var hasUnlimitedSeats bool
 		err := rows.Scan(
 			&ev.ID,
 			&ev.Title,
@@ -283,11 +334,19 @@ func (s *Storage) GetAllEvents(ctx context.Context, limit, offset *int, eventTyp
 			&ev.AvailableSeats,
 			&ev.CreatorEmail,
 			&locationWKT,
+			&hasUnlimitedSeats,
 			&ev.Description,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("op: %s, err: %v", op, err)
 		}
+
+		if hasUnlimitedSeats {
+			ev.HasUnlimitedSeats = "true"
+		} else {
+			ev.HasUnlimitedSeats = "false"
+		}
+
 		ev.Location, err = parseWKT(locationWKT)
 		if err != nil {
 			return nil, fmt.Errorf("op: %s, err: invalid location format: %v", op, err)
@@ -326,7 +385,7 @@ func (s *Storage) SubscribeToEvent(ctx context.Context, eventId uuid.UUID, email
 	query = `
 	UPDATE events
 	SET available_seats = available_seats - 1
-	WHERE id = $1
+	WHERE id = $1 AND has_unlimited_seats = 'f'
 	`
 
 	_, err = tx.Exec(ctx, query, eventId)
@@ -382,16 +441,71 @@ func (s *Storage) UnsubscribeFromEvent(ctx context.Context, enrollmentId uuid.UU
 	const op = "storage.postgres.UnsibscribeFromEvent"
 
 	query := `
-	DELETE FROM enrollments
-	WHERE id=$1
+	WITH deleted AS (
+		DELETE FROM enrollments
+		WHERE id = $1
+		RETURNING event_id
+	)
+	UPDATE events
+	SET available_seats = available_seats + 1
+	WHERE id IN (SELECT event_id FROM deleted)
+	AND has_unlimited_seats = FALSE;
+
 	`
 
 	_, err := s.conn.Exec(ctx, query, enrollmentId)
 	if err != nil {
 		return fmt.Errorf("op: %s, err: %v", op, err)
 	}
-	
+
 	return nil
+}
+
+func (s *Storage) GetAllSubscriptions(ctx context.Context, eventId uuid.UUID) ([]enrollment.Enrollment, error) {
+	const op = "storage.postgres.GetAllSubscriptions"
+
+	var enrollments []enrollment.Enrollment
+
+	query := `
+	SELECT id, created_at, user_email
+	FROM enrollments
+	WHERE event_id = $1
+	`
+
+	rows, err := s.conn.Query(ctx, query, eventId.String())
+	if err != nil {
+
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return []enrollment.Enrollment{}, nil
+		}
+
+		return []enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	for rows.Next() {
+		var enrllmnt enrollment.Enrollment
+		var idString string
+
+		err = rows.Scan(
+			&idString,
+			&enrllmnt.CreatedAt,
+			&enrllmnt.UserEmail,
+		)
+
+		if err != nil {
+			return []enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+		}
+
+		enrllmnt.EventId = eventId
+		enrllmnt.Id, err = uuid.Parse(idString)
+		if err != nil {
+			return []enrollment.Enrollment{}, fmt.Errorf("op: %s, err: %v", op, err)
+		}
+
+		enrollments = append(enrollments, enrllmnt)
+	}
+
+	return enrollments, nil
 }
 
 func parseWKT(wkt string) (orb.Point, error) {

@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS events (
     created_at TIMESTAMP DEFAULT NOW(),
     location GEOGRAPHY(Point, 4326) NOT NULL,
     description TEXT,
+    has_unlimited_seats BOOLEAN DEFAULT FALSE, 
     CONSTRAINT fk_creator FOREIGN KEY (creator_email) REFERENCES users(email) ON DELETE CASCADE
 );
 
