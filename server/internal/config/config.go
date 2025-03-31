@@ -15,6 +15,7 @@ type Config struct {
 	DBUser      string
 	DBPassword  string
 	DBName      string
+	CacheAddr 	string
 	ServerPort  string
 	Env         string
 	RWTimeout   time.Duration
@@ -69,6 +70,7 @@ func LoadConfig() *Config {
 		DBPassword:  getEnv("POSTGRES_PASSWORD", "secret"),
 		DBName:      getEnv("POSTGRES_DB", "mydb"),
 		ServerPort:  getEnv("SERVER_PORT", "8080"),
+		CacheAddr:   getEnv("CACHE_ADDR", "localhost:6379"),
 		RWTimeout:   rwTimeout,
 		IdleTimeout: idleTimeout,
 		Env:         getEnv("ENV", "local"),

@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/event"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/models/letter"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage"
 	"github.com/paulmach/orb"
 	"gopkg.in/gomail.v2"
 )
@@ -18,6 +21,7 @@ type NominatimResponse struct {
 }
 
 func (s *Service) SendNotificationEmail(
+	ctx context.Context,
 	oldEvent event.Event,
 	newEvent event.Event,
 	name string,
@@ -44,14 +48,57 @@ func (s *Service) SendNotificationEmail(
 
 	if !oldEvent.Location.Equal(newEvent.Location) {
 
-		oldLocation, err := s.ReverseGeocode(oldEvent.Location)
-		if err != nil {
-			return fmt.Errorf("op: %s, err: %v", op, err)
-		}
+		var oldLocation, newLocation string
+		var err error
 
-		newLocation, err := s.ReverseGeocode(newEvent.Location)
-		if err != nil {
-			return fmt.Errorf("op: %s, err: %v", op, err)
+		if s.cache != nil {
+			oldLocation, err = s.cache.GetLocation(ctx, oldEvent.Location)
+			if err != nil {
+				log.Error("error getting cache entry", slog.String("err", err.Error()))
+				if ! errors.Is(err, storage.ErrorLocationNotFound) {
+					return fmt.Errorf("op: %s, err: %v", op, err)
+				}
+
+				oldLocation, err = s.ReverseGeocode(oldEvent.Location)
+				if err != nil {
+					return fmt.Errorf("op: %s, err: %v", op, err)
+				}
+
+				err = s.cache.SetLocation(ctx, oldEvent.Location, oldLocation)
+				if err != nil {
+					return fmt.Errorf("op: %s, err: %v", op, err)
+				}
+			}
+
+			newLocation, err = s.cache.GetLocation(ctx, newEvent.Location)
+			if err != nil {
+				log.Error("error getting cache entry", slog.String("err", err.Error()))
+				if ! errors.Is(err, storage.ErrorLocationNotFound) {
+					return fmt.Errorf("op: %s, err: %v", op, err)
+				}
+
+				newLocation, err = s.ReverseGeocode(newEvent.Location)
+				if err != nil {
+					return fmt.Errorf("op: %s, err: %v", op, err)
+				}
+
+				err = s.cache.SetLocation(ctx, newEvent.Location, newLocation)
+				if err != nil {
+					return fmt.Errorf("op: %s, err: %v", op, err)
+				}
+			}
+		} else {
+	
+			oldLocation, err = s.ReverseGeocode(oldEvent.Location)
+			if err != nil {
+				return fmt.Errorf("op: %s, err: %v", op, err)
+			}
+	
+			newLocation, err = s.ReverseGeocode(newEvent.Location)
+			if err != nil {
+				return fmt.Errorf("op: %s, err: %v", op, err)
+			}
+
 		}
 
 		changes = append(changes, letter.NewChange(

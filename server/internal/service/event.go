@@ -104,15 +104,13 @@ func (s *Service) UpdateEvent(ctx context.Context, evt event.Event) error {
 			return fmt.Errorf("op: %s, err: %v", op, err)
 		}
 
-		err = s.SendNotificationEmail(
+		go s.SendNotificationEmail(
+			ctx,
 			oldEvent,
 			evt,
 			user.Name,
 			user.Email,
 		)
-		if err != nil {
-			return fmt.Errorf("op: %s, err: %v", op, err)
-		}
 	}
 
 	return nil

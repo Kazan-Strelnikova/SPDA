@@ -25,6 +25,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/log"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/service"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/postgres"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/redis"
 	"github.com/gin-gonic/gin"
 	"go.elastic.co/apm/module/apmgin/v2"
 	"go.elastic.co/apm/v2"
@@ -39,15 +40,20 @@ func main() {
 	log.Info("connecting to database")
 
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
-	log.Debug("connection info", slog.String("db url", dbURL))
+	// log.Debug("connection info", slog.String("db url", dbURL))
 	storage := postgres.New(context.Background(), dbURL)
 	defer storage.Close()
 
+	log.Debug(cfg.CacheAddr)
+	cache, err := redis.New(cfg.CacheAddr)
+	if err != nil {
+		log.Error("error connecting to cache. proceeding without it", slog.String("err", err.Error()))
+		cache = nil
+	}
+
 	log.Info("database connection established")
 
-	//TODO:
-	//Move the secret out
-	service := service.New(log, storage, storage, cfg.JWTSecret, cfg.SMTPConfig)
+	service := service.New(log, storage, storage, cfg.JWTSecret, cfg.SMTPConfig, cache)
 
 	router := gin.Default()
 
