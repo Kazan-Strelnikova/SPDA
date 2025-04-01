@@ -102,7 +102,9 @@ func main() {
 		}
 	}()
 
+	go service.Monitor(done)
 	<-done
+	close(done)
 	log.Info("stopping the server")
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.RWTimeout)
 	defer cancel()

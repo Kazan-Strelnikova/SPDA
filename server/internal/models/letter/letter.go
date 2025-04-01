@@ -1,6 +1,8 @@
 package letter
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Change struct {
 	Name       string
@@ -36,6 +38,25 @@ func NewUpdateNotification(name, title string, changes []Change) string {
 	}
 
 	text += "\n\t</ul>\n</div>"
+
+	return text
+}
+
+func NewReminderNotification(name, title, location, time string) string {
+	text := fmt.Sprintf(`
+		<div> 
+			<h1> Hello, dear %s </h1>
+			<p> We remind you of an upcoming event </p>
+			<h1> %s </h1>
+			<h3> The event will take place at <b> %s </b></h3>
+			<h3> The time of the event is <b> %s </b></h3>
+		</div>
+		`,
+		name, 
+		title,
+		location,
+		time,
+	)
 
 	return text
 }

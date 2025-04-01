@@ -16,11 +16,13 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+const DateFormat = "January 2, 2006 15:04"
+
 type NominatimResponse struct {
 	DisplayName string `json:"display_name"`
 }
 
-func (s *Service) SendNotificationEmail(
+func (s *Service) SendEventChangesNotificationEmail(
 	ctx context.Context,
 	oldEvent event.Event,
 	newEvent event.Event,
@@ -41,8 +43,8 @@ func (s *Service) SendNotificationEmail(
 	if !oldEvent.Date.Equal(newEvent.Date) {
 		changes = append(changes, letter.NewChange(
 			"Date",
-			oldEvent.Date.Format("January 2, 2006 15:04"),
-			newEvent.Date.Format("January 2, 2006 15:04"),
+			oldEvent.Date.Format(DateFormat),
+			newEvent.Date.Format(DateFormat),
 		))
 	}
 
@@ -113,25 +115,52 @@ func (s *Service) SendNotificationEmail(
 	}
 
 	content := letter.NewUpdateNotification(name, oldEvent.Title, changes)
+	
+	return s.sendMessage("Changes in an upcoming event", content, email)
+}
 
-	m := gomail.NewMessage()
+func (s *Service) SendEventNotificationEmail(
+	ctx 	context.Context,
+	name 	string,
+	email 	string,
+	evt 	event.Event,
+) error {
+	const op = "service.SendNotificationEmail"
 
-	m.SetHeader("From", s.smtp.Username)
-	m.SetHeader("To", email)
-	m.SetHeader("Subject", "Changes in an upcoming event")
-	m.SetBody("text/html", content)
-
-	d := gomail.NewDialer(
-		s.smtp.Host,
-		s.smtp.Port,
-		s.smtp.Username,
-		s.smtp.Password,
+	log := s.log.With(
+		slog.String("op", op),
+		slog.String("email", email),
+		slog.String("event_id", evt.ID.String()),
 	)
 
-	if err := d.DialAndSend(m); err != nil {
+	location, err := s.cache.GetLocation(ctx, evt.Location)
+	if err != nil && !errors.Is(err, storage.ErrorLocationNotFound) {
+		log.Error("error accessing cache", slog.String("err", err.Error()))
 		return fmt.Errorf("op: %s, err: %v", op, err)
 	}
-	return nil
+
+	if err != nil {
+		location, err = s.ReverseGeocode(evt.Location)
+		if err != nil {
+			log.Error("error getting locaion from nominatim", slog.String("err", err.Error()))
+			return fmt.Errorf("op: %s, err: %v", op, err)
+		}
+
+		err = s.cache.SetLocation(ctx, evt.Location, location)
+		if err != nil {
+			log.Error("error writing location to cache", slog.String("err", err.Error()))
+			// return fmt.Errorf("op: %s, err: %v", op, err)
+		}
+	}
+
+	content := letter.NewReminderNotification(
+		name,
+		evt.Title,
+		location,
+		evt.Date.Format(DateFormat),
+	)
+
+	return s.sendMessage("Upcoming event", content, email)
 }
 
 func (s *Service) ReverseGeocode(point orb.Point) (string, error) {
@@ -169,4 +198,28 @@ func (s *Service) ReverseGeocode(point orb.Point) (string, error) {
 	}
 
 	return result.DisplayName, nil
+}
+
+func (s *Service) sendMessage(subject, content, email string) error {
+	const op = "service.sendMessage"
+
+	m := gomail.NewMessage()
+
+	m.SetHeader("From", s.smtp.Username)
+	m.SetHeader("To", email)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", content)
+
+	d := gomail.NewDialer(
+		s.smtp.Host,
+		s.smtp.Port,
+		s.smtp.Username,
+		s.smtp.Password,
+	)
+
+	if err := d.DialAndSend(m); err != nil {
+		return fmt.Errorf("op: %s, err: %v", op, err)
+	}
+
+	return nil
 }

@@ -98,14 +98,25 @@ func (s *Service) UpdateEvent(ctx context.Context, evt event.Event) error {
 	}
 
 	for _, enrollment := range enrolledUsers {
-
+		enrollment := enrollment
 		user, err := s.usrRepo.GetUser(ctx, enrollment.UserEmail)
 		if err != nil {
 			return fmt.Errorf("op: %s, err: %v", op, err)
 		}
 
-		go s.SendNotificationEmail(
-			ctx,
+		var newCtx context.Context
+		var cancel context.CancelFunc
+
+		deadline, ok := ctx.Deadline()
+		if ok {
+			newCtx, cancel = context.WithDeadline(context.WithoutCancel(ctx), deadline) 
+			_ = cancel
+		} else {
+			newCtx = context.WithoutCancel(ctx)
+		}
+
+		go s.SendEventChangesNotificationEmail(
+			newCtx,
 			oldEvent,
 			evt,
 			user.Name,
