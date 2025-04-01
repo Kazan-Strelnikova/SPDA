@@ -24,8 +24,7 @@ type Service struct {
 	evtRepo EventRepository
 	tknScrt string
 	smtp    config.SMTPConfig
-	cache 	Cache
-
+	cache   Cache
 }
 
 var (
@@ -49,6 +48,6 @@ func New(
 		evtRepo: evtRepo,
 		tknScrt: tokenSecret,
 		smtp:    smtp,
-		cache: 	 cache,
+		cache:   cache,
 	}
 }

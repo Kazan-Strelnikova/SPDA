@@ -15,7 +15,7 @@ type Config struct {
 	DBUser      string
 	DBPassword  string
 	DBName      string
-	CacheAddr 	string
+	CacheAddr   string
 	ServerPort  string
 	Env         string
 	RWTimeout   time.Duration

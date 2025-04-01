@@ -109,7 +109,7 @@ func (s *Service) UpdateEvent(ctx context.Context, evt event.Event) error {
 
 		deadline, ok := ctx.Deadline()
 		if ok {
-			newCtx, cancel = context.WithDeadline(context.WithoutCancel(ctx), deadline) 
+			newCtx, cancel = context.WithDeadline(context.WithoutCancel(ctx), deadline)
 			_ = cancel
 		} else {
 			newCtx = context.WithoutCancel(ctx)

@@ -57,7 +57,7 @@ func (s *Service) SendEventChangesNotificationEmail(
 			oldLocation, err = s.cache.GetLocation(ctx, oldEvent.Location)
 			if err != nil {
 				log.Error("error getting cache entry", slog.String("err", err.Error()))
-				if ! errors.Is(err, storage.ErrorLocationNotFound) {
+				if !errors.Is(err, storage.ErrorLocationNotFound) {
 					return fmt.Errorf("op: %s, err: %v", op, err)
 				}
 
@@ -75,7 +75,7 @@ func (s *Service) SendEventChangesNotificationEmail(
 			newLocation, err = s.cache.GetLocation(ctx, newEvent.Location)
 			if err != nil {
 				log.Error("error getting cache entry", slog.String("err", err.Error()))
-				if ! errors.Is(err, storage.ErrorLocationNotFound) {
+				if !errors.Is(err, storage.ErrorLocationNotFound) {
 					return fmt.Errorf("op: %s, err: %v", op, err)
 				}
 
@@ -90,12 +90,12 @@ func (s *Service) SendEventChangesNotificationEmail(
 				}
 			}
 		} else {
-	
+
 			oldLocation, err = s.ReverseGeocode(oldEvent.Location)
 			if err != nil {
 				return fmt.Errorf("op: %s, err: %v", op, err)
 			}
-	
+
 			newLocation, err = s.ReverseGeocode(newEvent.Location)
 			if err != nil {
 				return fmt.Errorf("op: %s, err: %v", op, err)
@@ -115,15 +115,15 @@ func (s *Service) SendEventChangesNotificationEmail(
 	}
 
 	content := letter.NewUpdateNotification(name, oldEvent.Title, changes)
-	
+
 	return s.sendMessage("Changes in an upcoming event", content, email)
 }
 
 func (s *Service) SendEventNotificationEmail(
-	ctx 	context.Context,
-	name 	string,
-	email 	string,
-	evt 	event.Event,
+	ctx context.Context,
+	name string,
+	email string,
+	evt event.Event,
 ) error {
 	const op = "service.SendNotificationEmail"
 

@@ -22,8 +22,8 @@ func New(
 	addr string,
 ) (*Client, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr: addr,
-		DB: 0,
+		Addr:                  addr,
+		DB:                    0,
 		ContextTimeoutEnabled: true,
 	})
 
@@ -36,14 +36,15 @@ func New(
 	}, nil
 }
 
-
 func (c *Client) GetEvent(ctx context.Context, id uuid.UUID) (event.Event, error) {
 	const op = "storage.redis.GetEvent"
 	key := "ev" + id.String()
 
 	cmd := c.client.Get(ctx, key)
 	if cmd.Err() != nil {
-		if cmd.Err().Error() == redis.Nil.Error() { return event.Event{}, storage.ErrorEventNotFound}
+		if cmd.Err().Error() == redis.Nil.Error() {
+			return event.Event{}, storage.ErrorEventNotFound
+		}
 		return event.Event{}, cmd.Err()
 	}
 
@@ -61,7 +62,7 @@ func (c *Client) GetEvent(ctx context.Context, id uuid.UUID) (event.Event, error
 	}
 
 	return res, nil
-} 
+}
 
 func (c *Client) SetEvent(ctx context.Context, evt event.Event) error {
 	const op = "storage.redis.SetEvent"
@@ -72,7 +73,7 @@ func (c *Client) SetEvent(ctx context.Context, evt event.Event) error {
 		return fmt.Errorf("op: %s, err: %v", op, err)
 	}
 
-	return c.client.Set(ctx, "ev" + evt.ID.String(), b.Bytes(), time.Until(evt.Date)).Err()
+	return c.client.Set(ctx, "ev"+evt.ID.String(), b.Bytes(), time.Until(evt.Date)).Err()
 }
 
 func (c *Client) GetLocation(ctx context.Context, point orb.Point) (string, error) {
@@ -82,7 +83,9 @@ func (c *Client) GetLocation(ctx context.Context, point orb.Point) (string, erro
 
 	cmd := c.client.Get(ctx, key)
 	if cmd.Err() != nil {
-		if cmd.Err().Error() == redis.Nil.Error() { return "", storage.ErrorLocationNotFound}
+		if cmd.Err().Error() == redis.Nil.Error() {
+			return "", storage.ErrorLocationNotFound
+		}
 		return "", cmd.Err()
 	}
 
@@ -100,7 +103,7 @@ func (c *Client) GetLocation(ctx context.Context, point orb.Point) (string, erro
 	}
 
 	return res, nil
-} 
+}
 
 func (c *Client) SetLocation(ctx context.Context, point orb.Point, content string) error {
 	const op = "storage.redis.SetLocation"
@@ -111,7 +114,7 @@ func (c *Client) SetLocation(ctx context.Context, point orb.Point, content strin
 		return fmt.Errorf("op: %s, err: %v", op, err)
 	}
 
-	return c.client.Set(ctx, "pt" + fmt.Sprintf("%f%f", point.Lat(), point.Lon()), b.Bytes(), 0).Err()
+	return c.client.Set(ctx, "pt"+fmt.Sprintf("%f%f", point.Lat(), point.Lon()), b.Bytes(), 0).Err()
 }
 
 func (c *Client) Close() error {

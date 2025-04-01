@@ -52,7 +52,7 @@ func NewReminderNotification(name, title, location, time string) string {
 			<h3> The time of the event is <b> %s </b></h3>
 		</div>
 		`,
-		name, 
+		name,
 		title,
 		location,
 		time,
