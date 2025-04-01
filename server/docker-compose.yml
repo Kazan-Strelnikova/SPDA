@@ -21,7 +21,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      logstash:
+      # logstash:
+      #   condition: service_healthy
+      redis:
         condition: service_healthy
     env_file:
       - .env
@@ -35,6 +37,20 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  redis:
+    image: redis:7.2
+    container_name: event_planner_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - private_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   elasticsearch:
     image: elasticsearch:8.10.2

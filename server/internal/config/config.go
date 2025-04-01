@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -14,12 +15,22 @@ type Config struct {
 	DBUser      string
 	DBPassword  string
 	DBName      string
+	CacheAddr   string
 	ServerPort  string
 	Env         string
 	RWTimeout   time.Duration
 	IdleTimeout time.Duration
-	LogHost		string
-	LogPort		string
+	LogHost     string
+	LogPort     string
+	SMTPConfig  SMTPConfig
+	JWTSecret   string
+}
+
+type SMTPConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
 }
 
 func LoadConfig() *Config {
@@ -37,6 +48,21 @@ func LoadConfig() *Config {
 		log.Fatal("error parsing duration")
 	}
 
+	SMPTPort, err := strconv.Atoi(getEnv("SMPT_PORT", "587"))
+	if err != nil {
+		log.Fatal("smtp port must be a number")
+	}
+
+	SMTPPassword := os.Getenv("SMTP_PASSWORD")
+	if SMTPPassword == "" {
+		log.Fatal("no SMTP password provided")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("missing jwt secret")
+	}
+
 	config := &Config{
 		DBHost:      getEnv("POSTGRES_HOST", "localhost"),
 		DBPort:      getEnv("POSTGRES_PORT", "5432"),
@@ -44,11 +70,19 @@ func LoadConfig() *Config {
 		DBPassword:  getEnv("POSTGRES_PASSWORD", "secret"),
 		DBName:      getEnv("POSTGRES_DB", "mydb"),
 		ServerPort:  getEnv("SERVER_PORT", "8080"),
+		CacheAddr:   getEnv("CACHE_ADDR", "localhost:6379"),
 		RWTimeout:   rwTimeout,
 		IdleTimeout: idleTimeout,
 		Env:         getEnv("ENV", "local"),
-		LogHost:  	 getEnv("LOGSTASH_HOST", "logstash"),
-		LogPort:  	 getEnv("LOGSTASH_PORT", "5044"),
+		LogHost:     getEnv("LOGSTASH_HOST", "logstash"),
+		LogPort:     getEnv("LOGSTASH_PORT", "5044"),
+		JWTSecret:   jwtSecret,
+		SMTPConfig: SMTPConfig{
+			Host:     getEnv("SMTP_HOST", "smtp.google.com"),
+			Port:     SMPTPort,
+			Username: getEnv("SMTP_USERNAME", "zvukovat@gmail.com"),
+			Password: SMTPPassword,
+		},
 	}
 	return config
 }

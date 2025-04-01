@@ -18,10 +18,14 @@ tasks:
     cmds:
       - docker-compose down
 
-  docker-inspect:
+  docker-inspect-pg:
     cmds:
       - docker exec -it event_planner_postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB}
-      
+    
+  docker-inspect-redis:
+    cmds:
+      - docker exec -it event_planner_redis redis-cli
+
   migrate-up:
     cmds:
       - go run cmd/migrator/main.go -db "{{.DB_URL}}" -path "./migrations" -action up

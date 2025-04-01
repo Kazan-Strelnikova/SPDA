@@ -16,6 +16,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/delete"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/get"
 	getall "github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/getAll"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/events/put"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/middleware/auth"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/ping"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/http/users/login"
@@ -24,6 +25,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/log"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/service"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/postgres"
+	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/redis"
 	"github.com/gin-gonic/gin"
 	"go.elastic.co/apm/module/apmgin/v2"
 	"go.elastic.co/apm/v2"
@@ -38,20 +40,25 @@ func main() {
 	log.Info("connecting to database")
 
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
-	log.Debug("connection info", slog.String("db url", dbURL))
+	// log.Debug("connection info", slog.String("db url", dbURL))
 	storage := postgres.New(context.Background(), dbURL)
 	defer storage.Close()
 
+	log.Debug(cfg.CacheAddr)
+	cache, err := redis.New(cfg.CacheAddr)
+	if err != nil {
+		log.Error("error connecting to cache. proceeding without it", slog.String("err", err.Error()))
+		cache = nil
+	}
+
 	log.Info("database connection established")
 
-	//TODO:
-	//Move the secret out
-	service := service.New(log, storage, storage, "filler_secret")
+	service := service.New(log, storage, storage, cfg.JWTSecret, cfg.SMTPConfig, cache)
 
 	router := gin.Default()
-	
+
 	tracer, err := apm.NewTracerOptions(apm.TracerOptions{
-		ServiceName: "Event-planner",
+		ServiceName:    "Event-planner",
 		ServiceVersion: "1.0",
 	})
 
@@ -60,7 +67,6 @@ func main() {
 	} else {
 		log.Warn("tracer initialization error", slog.String("err", err.Error()))
 	}
-
 
 	router.GET("/ping", ping.New(log))
 
@@ -73,6 +79,7 @@ func main() {
 	router.POST("/events", create.New(log, service, cfg.RWTimeout))
 	router.GET("/events", getall.New(log, service, cfg.RWTimeout))
 	router.GET("/events/:event_id", get.New(log, service, cfg.RWTimeout))
+	router.PUT("/events/:event_id", put.New(log, service, cfg.RWTimeout))
 	router.POST("/events/:event_id/enrollment", auth.New(log, service, cfg.RWTimeout), createEnrollment.New(log, service, cfg.RWTimeout))
 	router.DELETE("/events/:event_id/enrollment", auth.New(log, service, cfg.RWTimeout), deleteEnrollment.New(log, service, cfg.RWTimeout))
 	router.DELETE("/events/:event_id", auth.New(log, service, cfg.RWTimeout), delete.New(log, service, cfg.RWTimeout))
@@ -95,7 +102,9 @@ func main() {
 		}
 	}()
 
+	go service.Monitor(done)
 	<-done
+	close(done)
 	log.Info("stopping the server")
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.RWTimeout)
 	defer cancel()
