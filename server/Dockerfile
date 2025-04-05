@@ -1,6 +1,8 @@
 FROM golang:1.24 AS builder
 WORKDIR /app
 
+ARG SERVER_PORT
+
 COPY go.mod go.sum ./
 RUN go mod download
 
