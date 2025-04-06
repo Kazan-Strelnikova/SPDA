@@ -1,0 +1,14 @@
+@import '../../variables.module.scss';
+.root {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    width: 100%;
+
+    .title {
+        color: $primary;
+    }
+}
+

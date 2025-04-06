@@ -1,0 +1,38 @@
+@import '../../variables.module.scss';
+
+.popper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: $text;
+    margin: 0;
+    padding: 0;
+    align-items: flex-end;
+
+}
+
+.popper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: $text;
+    margin: 0;
+    padding: 0;
+    align-items: flex-end;
+
+    .buttons {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+    }
+}
+
+.user {
+    background-color: $secondary !important;
+    color: $primary !important;
+    cursor: pointer;
+
+    .userIcon {
+        color: $primary;
+    }
+}
