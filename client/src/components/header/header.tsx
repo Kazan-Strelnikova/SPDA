@@ -5,7 +5,7 @@ import { User } from '../user/user';
 export const Header : React.FC = () => {
     return (
     <header className={styles.root}>
-        <Typography variant='h3'className={styles.title}>
+        <Typography variant='h4'className={styles.title}>
             Крутой тайтл
         </Typography>
         

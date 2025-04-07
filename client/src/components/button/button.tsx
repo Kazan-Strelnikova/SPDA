@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import styles from './button.module.scss';
-import { ReactNode } from "react";
+import { MouseEventHandler, ReactNode } from "react";
 
 
 type ButtonVariant = 'filled' | 'outlined';
@@ -8,15 +8,16 @@ type ButtonVariant = 'filled' | 'outlined';
 interface ButtonProps {
     filled?: boolean;
     outlined?: boolean;
+    onClick?: MouseEventHandler<HTMLButtonElement>;
     children: ReactNode;
 }
-export const ButtonAKAM : React.FC<ButtonProps> = ({filled=false, outlined=false, children}) => {
+export const ButtonAKAM : React.FC<ButtonProps> = ({filled=false, outlined=false, onClick, children}) => {
     return (
         <>
         {filled &&
-        <Button variant="contained" disableElevation className={styles.filledButton}>{children}</Button>}
+        <Button onClick={onClick} variant="contained" disableElevation className={styles.filledButton}>{children}</Button>}
         {
-        outlined &&  <Button variant="outlined" disableElevation className={styles.outlinedButton}>{children}</Button>}
+        outlined &&  <Button onClick={onClick} variant="outlined" disableElevation className={styles.outlinedButton}>{children}</Button>}
         </>
     );
 }

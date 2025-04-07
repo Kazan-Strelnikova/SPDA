@@ -11,20 +11,10 @@
 
 }
 
-.popper {
+.buttons {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
-    color: $text;
-    margin: 0;
-    padding: 0;
-    align-items: flex-end;
-
-    .buttons {
-        display: flex;
-        flex-direction: row;
-        gap: 10px;
-    }
 }
 
 .user {
