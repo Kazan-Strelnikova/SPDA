@@ -7,29 +7,29 @@ import { Calendar } from "../components/calendar/calendar";
 import { UserContext } from "../contexts/UserContext";
 
 export const MainPage : React.FC = () => {
-    const userContext = useContext(UserContext);
-    if (!userContext) {
-        throw new Error("Calendar must be used within a UserProvider");
-    }
-    const { user, setUser } = userContext;
+    // const userContext = useContext(UserContext);
+    // if (!userContext) {
+    //     throw new Error("Calendar must be used within a UserProvider");
+    // }
+    // const { user, setUser } = userContext;
 
 
-    useEffect(
-        ()=>{(async function fun() {
-            try {
-                const evts = await getEventsWithFilters({
-                    before: new Date("2025-05-15T09:00:01Z"),
-                    after: new Date("2025-05-15T08:00:00Z"),
-                    visitorEmail: user?.email,
-                })
-                console.log(evts, user?.email)
-            } catch (err: any) {
-                console.log("caught exception", err)
-            }
-        })()}
-    ,[])
+    // useEffect(
+    //     ()=>{(async function fun() {
+    //         try {
+    //             const evts = await getEventsWithFilters({
+    //                 before: new Date("2025-05-15T09:00:01Z"),
+    //                 after: new Date("2025-05-15T08:00:00Z"),
+    //                 visitorEmail: user?.email,
+    //             })
+    //             console.log(evts, user?.email)
+    //         } catch (err: any) {
+    //             console.log("caught exception", err)
+    //         }
+    //     })()}
+    // ,[])
 
-    console.log("mmm", user?.email)
+    // console.log("mmm", user?.email)
 
     return <div>
         Main
