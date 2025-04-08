@@ -1,0 +1,1 @@
+export type Category = "Conference" | "Meetup" | "Concert" | "Exhibition" | "Party" | "Sport" | "Education" | "Competition" | "Other";
