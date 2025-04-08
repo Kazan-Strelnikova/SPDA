@@ -58,7 +58,7 @@ export const Calendar : FC<CalendarProps> = ({before, after}) => {
                 setVisitedEventIds((await getEventsWithFilters({
                     before: before,
                     after: after,
-                    visitorEmail: user?.email,
+                    visitorEmail: user == undefined ? "." : user.email,
                   })).map(evt => evt.id))
                   console.log(visitedEventIds)
             } catch (err: any) {
