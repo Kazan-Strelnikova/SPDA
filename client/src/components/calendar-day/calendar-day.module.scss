@@ -17,14 +17,11 @@
     }
 
     .eventsContainer {
-        width: 100%;
         display: flex;
         flex-direction: column;
 
 
         .divider {
-            width: 100%;
-            max-width: 100%;
             background-color: $on-primary-container;
         }
     }
