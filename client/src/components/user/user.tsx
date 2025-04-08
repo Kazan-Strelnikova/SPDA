@@ -35,7 +35,7 @@ export const User : React.FC = () => {
   }
   const { user, setUser } = userContext;
 
-  useEffect(() => setUser({id: '1', name: "Константин", lastName: 'Константинов', email: 'kostyan.kostyanuch@mailmymail.commomom'}), [setUser]);
+  useEffect(() => setUser({id: '1', name: "Константин", lastName: 'Константинов', email: 'justcoolestgiraffe9@gmail.com'}), [setUser]);
   
   function handleLogOut(){
     setUser(null);

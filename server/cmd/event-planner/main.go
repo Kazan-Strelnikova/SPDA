@@ -26,6 +26,7 @@ import (
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/service"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/postgres"
 	"github.com/Kazan-Strelnikova/SPDA/server/internal/storage/redis"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.elastic.co/apm/module/apmgin/v2"
 	"go.elastic.co/apm/v2"
@@ -61,6 +62,14 @@ func main() {
 		ServiceName:    "Event-planner",
 		ServiceVersion: "1.0",
 	})
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))	
 
 	if err == nil {
 		router.Use(apmgin.Middleware(router, apmgin.WithTracer(tracer)))

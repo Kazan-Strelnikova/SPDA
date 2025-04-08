@@ -8,7 +8,7 @@ export interface EventNoteProps {
     isSignedUp : boolean;
     time : string;
     name : string;
-    category : Category
+    category : Category;
 }
 
 export const EventNote : FC<EventNoteProps> = (props) => {
