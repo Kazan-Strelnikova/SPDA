@@ -24,6 +24,16 @@
         .divider {
             background-color: $on-primary-container;
         }
+
+        .noEventsTypography {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: flex-start;
+            align-items: start;
+            width: auto;
+        }
     }
 
 }

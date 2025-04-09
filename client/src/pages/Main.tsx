@@ -1,10 +1,4 @@
-import { useContext, useEffect } from "react";
-import { CalendarDay } from "../components/calendar-day/calendar-day";
-import { EventNote } from "../components/event-note/event-note";
-import { getEventById } from "../http/get-event-by-id";
-import { getEventsWithFilters } from "../http/get-events-with-filters";
 import { Calendar } from "../components/calendar/calendar";
-import { UserContext } from "../contexts/UserContext";
 
 export const MainPage : React.FC = () => {
     // const userContext = useContext(UserContext);
@@ -72,6 +66,6 @@ export const MainPage : React.FC = () => {
                 time: "12:30"
             }
         ]}/> */}
-        <Calendar before={new Date("2025-05-15T09:00:01Z")} after={new Date("2025-05-15T08:00:00Z")} />
+        <Calendar from={new Date("2025-05-15T00:00:01Z")} />
     </div>;
 }

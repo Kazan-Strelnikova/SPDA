@@ -19,7 +19,7 @@ export const CalendarDay : FC<CalendarDayProps> = ({day, events}) => {
             ? 
             <>
                 <Divider className={styles.divider}/>
-                <Typography variant="body2">События отсутствуют</Typography>
+                <Typography variant="body2" className={styles.noEventsTypography}>События отсутствуют</Typography>
             </>
             : events.map((event, idx) => 
                 <>
