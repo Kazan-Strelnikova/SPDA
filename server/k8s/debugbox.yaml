@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debugbox
+  namespace: team-1-ns
+spec:
+  containers:
+    - name: debug
+      image: busybox:1.35
+      command: ["sh"]
+      args: ["-c", "sleep 3600"]
+      resources:
+        requests:
+          cpu: "10m"
+          memory: "16Mi"
+        limits:
+          cpu: "50m"
+          memory: "64Mi"
+  restartPolicy: Never
