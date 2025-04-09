@@ -2,6 +2,7 @@ import axios from "axios";
 import { Event, EventResponse } from "../types";
 import { getEventFromResponse } from "../utils/get-event-from-response";
 
+
 interface Filters {
     type?: number;
     limit?: number;
@@ -38,10 +39,6 @@ export const getEventsWithFilters = async (filters: Filters): Promise<Event[]> =
             "Content-Type": "application/json",
             },
             params,
-            // We may need to disable certificate verification for local testing (self-signed certs)
-            // httpsAgent: new (require("https").Agent)({
-            //   rejectUnauthorized: false,
-            // }),
         });
     
         return response.data.map(getEventFromResponse);

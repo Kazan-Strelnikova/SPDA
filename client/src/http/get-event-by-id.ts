@@ -1,4 +1,4 @@
-import axios from "axios"
+import axios from "axios";
 import { UUID } from "crypto";
 import { Event, EventResponse } from "../types";
 import { getEventFromResponse } from "../utils/get-event-from-response";
@@ -9,10 +9,6 @@ export const getEventById = async (id: UUID): Promise<Event> => {
         headers: {
           "Content-Type": "application/json",
         },
-        // We may need to disable certificate verification for local testing (self-signed certs)
-        // httpsAgent: new (require("https").Agent)({
-        //   rejectUnauthorized: false,
-        // }),
       });
   
       return getEventFromResponse(response.data);
