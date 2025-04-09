@@ -1,0 +1,25 @@
+@import '../../variables.module.scss';
+
+.eventBar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .monthCaption {
+        text-transform: capitalize;
+        color: $text-secondary;
+    }
+
+    .addButton {
+        gap: 8px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        padding: 10px 24px 10px 16px;
+        align-items: center;
+        border-radius: 100px;
+        color: $primary;
+        background-color: $secondary;
+        text-transform: none;
+    }
+}

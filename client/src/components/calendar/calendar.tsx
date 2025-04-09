@@ -1,5 +1,5 @@
 import { NavigateBefore, NavigateNext } from "@mui/icons-material";
-import { FC, useContext, useEffect, useState } from "react"
+import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from "react"
 import { getEventsWithFilters } from "../../http/get-events-with-filters";
 import { Event } from "../../types";
 import { CalendarDay } from "../calendar-day/calendar-day";
@@ -10,6 +10,7 @@ import { UserContext } from "../../contexts/UserContext";
 
 interface CalendarProps {
     from : Date;
+    setFrom : Dispatch<SetStateAction<Date>>
 }
 
 function getDaysInMonth(date: Date): number {
@@ -19,7 +20,7 @@ function getDaysInMonth(date: Date): number {
 }
 
 
-export const Calendar : FC<CalendarProps> = ({from}) => {
+export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
     const [dayBuckets, setDayBuckets] = useState<Event[][]>([]);
     const [visitedEventIds, setVisitedEventIds] = useState<UUID[]>();
     const [after, setAfter] = useState<Date>(from)
@@ -72,6 +73,9 @@ export const Calendar : FC<CalendarProps> = ({from}) => {
                     after: after,
                     visitorEmail: user == undefined ? "." : user.email,
                   })).map(evt => evt.id))
+                const copy = new Date(after);
+                copy.setDate(copy.getDate() + 3);
+                setFrom(copy)
             } catch (err: any) {
                 console.log("caught exception", err)
             }
@@ -99,7 +103,9 @@ export const Calendar : FC<CalendarProps> = ({from}) => {
                 : (idx + after.getDate())
             } 
             
-            events={dayEvents.map<EventNoteProps>(
+            events={dayEvents
+              .sort((a, b) => a.date.getTime() - b.date.getTime())
+              .map<EventNoteProps>(
                 function(evt, _idx, _arr): EventNoteProps {
                     const incl = visitedEventIds?.includes(evt.id)
                     console.log(incl, visitedEventIds, user?.email)
