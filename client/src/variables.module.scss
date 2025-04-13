@@ -9,3 +9,17 @@ $error-container: #FFDAD6;
 $text-secondary: #565D78;
 $tint: #475B9C;
 $on-primary-container: #B7C6FF;
+
+/* export as CSS module */
+:export {
+    primary: $primary;
+    secondary: $secondary;
+    text: $text;
+    textSecondary: $text-secondary;
+    background: $background;
+    dark: $dark;
+    error: $error;
+    errorContainer: $error-container;
+    tint: $tint;
+    onPrimaryContainer: $on-primary-container;
+  }
