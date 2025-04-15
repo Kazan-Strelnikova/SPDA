@@ -32,12 +32,10 @@ export const LogInPage: React.FC = () => {
 
     return (
         <Box sx={{ 
-            minHeight: '100vh', 
+            minHeight: '70vh', 
             display: 'flex',
             justifyContent: 'center', 
             alignItems: 'center',
-            position: 'relative',
-            top: '-100px'
         }}>
             <Container maxWidth="xs" sx={{ my: 4 }}>
                 <Box sx={{ 
