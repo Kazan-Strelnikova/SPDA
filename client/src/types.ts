@@ -27,3 +27,9 @@ export interface Event {
     has_unlimited_seats: string;
     description?: string;
 }
+
+export interface LoginResponse {
+    name: string;
+    last_name: string;
+    email: string;
+}

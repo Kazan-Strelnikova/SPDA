@@ -1,8 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Box, Button, TextField, Typography, Container, Paper, Link } from '@mui/material';
 import variables from '../variables.module.scss'; 
+import { UserContext } from '../contexts/UserContext';
+import { Exception } from 'sass';
+import axios from 'axios';
+import { postLoginUser } from '../http/post-login-user';
+import { useNavigate } from 'react-router-dom';
 
 export const LogInPage: React.FC = () => {
+    const navigate = useNavigate()
+    const userContext = useContext(UserContext);
+    if (!userContext) {
+        throw new Error("Log must be used within a UserProvider");
+    }
+    const { user, setUser } = userContext;
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -18,8 +30,18 @@ export const LogInPage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        // login logic
+        (() => {(async function (){
+            try {
+                const u = await postLoginUser(formData.email, formData.password)
+                setUser(u)
+                navigate("/")
+            } catch (err: any) {
+                console.log("login err", err)
+            }
+            
+        }())}) ()
+
+
     };
     
     useEffect(() => {
