@@ -3,6 +3,7 @@ import { Calendar } from "../../components/calendar/calendar";
 import styles from "./Main.module.scss"
 import AddIcon from "../../assets/add-icon.svg";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function getMonth(date: Date): string {
     switch (date.getMonth()) {
@@ -26,12 +27,13 @@ function getMonth(date: Date): string {
 export const MainPage : React.FC = () => {
 
     const [today, setToday] = useState<Date>(new Date())
+    const navigate = useNavigate()
 
     return <div>
         <div className={styles.eventBar}>
             <Typography variant="h5">События</Typography>
             <div className={styles.monthCaption} >{getMonth(today)}</div>
-            <Button className={styles.addButton}>
+            <Button className={styles.addButton} onClick={() => navigate("/create")}>
                 <img src={AddIcon} alt="AddIcon" />
                 <Typography variant="body2">
                     Добавить

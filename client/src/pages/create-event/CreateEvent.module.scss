@@ -27,6 +27,10 @@ ul {
                 pointer-events: none;
             }
 
+            .submit {
+                display: flex;
+                justify-content: end;
+            }
         }
 
         .date {

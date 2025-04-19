@@ -33,3 +33,15 @@ export interface LoginResponse {
     last_name: string;
     email: string;
 }
+
+export const Categories = [
+    ["Конференция", "Conference"],
+    ["Митап", "Meetup"],
+    ["Концерт", "Concert"],
+    ["Выставка", "Exhibition"],
+    ["Вечеринка", "Party"],
+    ["Спорт", "Sport"],
+    ["Образование", "Education"],
+    ["Соревнование", "Competition"],
+    ["Другое", "Other"],
+  ];
