@@ -1,13 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Box, Button, TextField, Typography, Container, Paper, Link } from '@mui/material';
-import variables from '../variables.module.scss'; 
+import variables from '../variables.module.scss';
+import { ErrorOutlineRounded } from '@mui/icons-material';
+import { postRegisterUser } from '../http/post-register-user';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../contexts/UserContext';
 
 export const SignUpPage: React.FC = () => {
+    const navigate = useNavigate()
+    const userContext = useContext(UserContext);
+    if (!userContext) {
+        throw new Error("Log must be used within a UserProvider");
+    }
+    const { user, setUser } = userContext;
+
     const [formData, setFormData] = useState({
+        name: '',
+        lastname: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
+
+    const [error, setError] = useState<string>('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -19,9 +34,37 @@ export const SignUpPage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        // registration logic 
+        if (formData.name === '' || formData.lastname === '' || formData.email === '' || formData.password === '' || formData.confirmPassword === ''){
+            setError('Все поля должны быть заполнены');
+            return;
+        }
+        const EMAIL_REGEXP = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!EMAIL_REGEXP.test(formData.email)){
+            setError('Некорректный формат почты'); 
+            return; 
+        } 
+        if (formData.password !== formData.confirmPassword){
+            setError('Пароли не совпадают');
+        }
+        setError('');
+        
+        (async () => {
+            try {
+                const createdUser = await postRegisterUser(
+                    formData.name,
+                    formData.lastname,
+                    formData.email,
+                    formData.password
+                );
+
+                setUser(createdUser)
+                navigate("/") 
+            } catch (err: any) {   
+                setError("Регистрация не удалась, попробуйте снова");
+            }
+        }) ()
     };
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -37,7 +80,7 @@ export const SignUpPage: React.FC = () => {
             justifyContent: 'center', 
             alignItems: 'center',
         }}>
-            <Container maxWidth="xs" sx={{ my: 4 }}>
+            <Container maxWidth="sm" sx={{ my: 4 }}>
                 <Box sx={{ 
                     display: 'flex', 
                     flexDirection: 'column',
@@ -57,6 +100,40 @@ export const SignUpPage: React.FC = () => {
                     }}
                 >
                     <Box component="form" onSubmit={handleSubmit} noValidate>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 2,
+                        }}>
+                            <TextField
+                                margin="normal" 
+                                fullWidth
+                                id="name"
+                                label="Имя"
+                                name="name"
+                                autoComplete="name"
+                                autoFocus
+                                value={formData.name}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                variant="outlined"
+                            />
+                            <TextField
+                                margin="normal" 
+                                fullWidth
+                                id="lastname"
+                                label="Фамилия"
+                                name="lastname"
+                                autoComplete="lastname"
+                                autoFocus
+                                value={formData.lastname}
+                                onChange={handleChange}
+                                sx={{ mb: 2 }}
+                                variant="outlined"
+                            />
+                        </Box>
+                    
                         <TextField
                             margin="normal" 
                             fullWidth
@@ -113,6 +190,17 @@ export const SignUpPage: React.FC = () => {
                         >
                             Зарегистрироваться
                         </Button>
+
+                        {error && 
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 1,
+                        }}>
+                            <ErrorOutlineRounded  style={{color: variables.error}}/>
+                            <Typography variant='body1' style={{color: variables.error}} >{error}</Typography>
+                        </Box>}
 
                         <Box sx={{ textAlign: 'center', mt: 1 }}>
                             <Typography variant="body2">

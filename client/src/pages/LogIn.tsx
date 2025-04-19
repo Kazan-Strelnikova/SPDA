@@ -2,19 +2,19 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Box, Button, TextField, Typography, Container, Paper, Link } from '@mui/material';
 import variables from '../variables.module.scss'; 
 import { UserContext } from '../contexts/UserContext';
-import { Exception } from 'sass';
-import axios from 'axios';
 import { postLoginUser } from '../http/post-login-user';
 import { useNavigate } from 'react-router-dom';
+import { ErrorOutlineRounded } from '@mui/icons-material';
 
 export const LogInPage: React.FC = () => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const userContext = useContext(UserContext);
     if (!userContext) {
         throw new Error("Log must be used within a UserProvider");
     }
     const { user, setUser } = userContext;
 
+    const [error, setError] = useState<string>('');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -30,12 +30,23 @@ export const LogInPage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (formData.email === '' || formData.password === ''){
+            setError('Все поля должны быть заполнены');
+            return;
+        }
+        const EMAIL_REGEXP = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!EMAIL_REGEXP.test(formData.email)){
+            setError('Некорректный формат почты'); 
+            return; 
+        } 
+        setError('');
         (() => {(async function (){
             try {
                 const u = await postLoginUser(formData.email, formData.password)
                 setUser(u)
                 navigate("/")
             } catch (err: any) {
+                setError('Войти не получилось, проверьте введенные данные и повторите'); 
                 console.log("login err", err)
             }
             
@@ -123,6 +134,17 @@ export const LogInPage: React.FC = () => {
                         >
                             Войти
                         </Button>
+                        
+                        {error && 
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 1,
+                        }}>
+                            <ErrorOutlineRounded  style={{color: variables.error}}/>
+                            <Typography variant='body1' style={{color: variables.error}} >{error}</Typography>
+                        </Box>}
 
                         <Box sx={{ textAlign: 'center', mt: 1 }}>
                             <Typography variant="body2">
