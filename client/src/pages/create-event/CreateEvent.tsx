@@ -24,6 +24,7 @@ import {
 } from "@mui/base";
 import { PickerValue } from "@mui/x-date-pickers/internals";
 import { ButtonAKAM } from "../../components/button/button";
+import LocationPicker  from "../../components/location-picker/location-picker"
 import { postEvent } from "../../http/post-event";
 import { UserContext } from "../../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -189,6 +190,15 @@ export const CreateEventPage: FC = () => {
             <ButtonAKAM onClick={handleSave} filled>Сохранить</ButtonAKAM>
           </div>
         </div>
+        
+          <LocationPicker onLocationChange={function(coords) {
+            setEvt({
+              ...evt,
+              location: [coords.lat,coords.lng]
+            } as Event);
+            console.log(evt);
+          }}/>
+        
       </div>
     </div>
   );

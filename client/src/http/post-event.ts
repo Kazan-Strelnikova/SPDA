@@ -11,7 +11,11 @@ export const postEvent = async function(evt: Event, email: string): Promise<numb
                 date: evt.date,
                 total_seats: Number(evt?.total_seats),
                 creator_email: email,
-                location: evt?.location ?? {
+                location: evt?.location ? {
+                    latitude: evt.location[0].toString(),
+                    longitude: evt.location[1].toString()
+                }
+                : {
                     latitude: "40.7128",
                     longitude: "-74.0060"
                 },

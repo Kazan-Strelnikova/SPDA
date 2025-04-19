@@ -5,7 +5,7 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainPage } from "./pages/main/Main";
 import { LogInPage } from "./pages/LogIn";
-import { SignUpPage } from "./pages/SignUp";
+import { SignUpPage } from "./pages/SignUp"; // Как дела? Я соскучился) А еще оно теперь работает, я настроил немного, надо только по стилю подогнать. 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import variables from './variables.module.scss';
 import { CreateEventPage } from "./pages/create-event/CreateEvent";

@@ -2,3 +2,4 @@ server/.env
 dummy2.txt
 server/new.env
 server/k8s/kubeconfig-team-1.yaml
+node_modules
