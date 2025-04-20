@@ -4,6 +4,7 @@ import styles from "./Main.module.scss"
 import AddIcon from "../../assets/add-icon.svg";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { EventMap } from "../../components/events-map/events-map";
 
 function getMonth(date: Date): string {
     switch (date.getMonth()) {
@@ -24,6 +25,8 @@ function getMonth(date: Date): string {
     }
 }
 
+const oneDayMs = 24 * 60 * 60 * 1000;
+
 export const MainPage : React.FC = () => {
 
     const [today, setToday] = useState<Date>(new Date())
@@ -41,5 +44,6 @@ export const MainPage : React.FC = () => {
             </Button>
         </div>
         <Calendar from={today} setFrom={setToday}/>
+        <EventMap after={new Date(today.getTime() - 3 * oneDayMs)} before={new Date(today.getTime() + 3 * oneDayMs)}/>
     </div>;
 }

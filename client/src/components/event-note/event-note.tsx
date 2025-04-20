@@ -3,8 +3,10 @@ import { Category } from "../../types";
 import styles from "./event-note.module.scss"
 import { Typography } from "@mui/material";
 import { getCategoryIcon } from "../../utils/get-category-icon";
+import { useNavigate } from "react-router-dom";
 
 export interface EventNoteProps {
+    id: string;
     isSignedUp : boolean;
     time : string;
     name : string;
@@ -12,8 +14,9 @@ export interface EventNoteProps {
 }
 
 export const EventNote : FC<EventNoteProps> = (props) => {
+    const navigate = useNavigate();
     return (<>
-        <div className={`${styles.eventNote} ${props.isSignedUp ? styles.background : ""}`}>
+        <div className={`${styles.eventNote} ${props.isSignedUp ? styles.background : ""}`} onClick={() => {navigate(`/event/${props.id}`)}}>
             <div className={styles.top}>
                 <Typography variant="subtitle2" className={styles.timeCaption}>{props.time}</Typography>
                 {getCategoryIcon(props.category)}

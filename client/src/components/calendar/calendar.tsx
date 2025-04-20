@@ -110,6 +110,7 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
                     const incl = visitedEventIds?.includes(evt.id)
                     console.log(incl, visitedEventIds, user?.email)
                     return {
+                        id: evt.id,
                         isSignedUp: incl == undefined ? false : incl,
                         name: evt.title,
                         time: evt.date.toTimeString().slice(0, 5),

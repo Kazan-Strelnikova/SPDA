@@ -5,10 +5,11 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainPage } from "./pages/main/Main";
 import { LogInPage } from "./pages/LogIn";
-import { SignUpPage } from "./pages/SignUp"; // Как дела? Я соскучился) А еще оно теперь работает, я настроил немного, надо только по стилю подогнать. 
+import { SignUpPage } from "./pages/SignUp";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import variables from './variables.module.scss';
 import { CreateEventPage } from "./pages/create-event/CreateEvent";
+import { EventPage } from "./pages/Event";
 
 
 const theme = createTheme({
@@ -47,6 +48,7 @@ const App: React.FC = () => {
               <Route path="/create" element={<CreateEventPage />} />
               <Route path="/login" element={<LogInPage />} />
               <Route path="/signup" element={<SignUpPage />} />
+              {/* <Route path="/event/:eventId" element={<EventPage />} /> */}
             </Routes>
           </div>
         </UserProvider>

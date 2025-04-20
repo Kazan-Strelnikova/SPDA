@@ -24,7 +24,7 @@ export const CalendarDay : FC<CalendarDayProps> = ({day, events}) => {
             : events.map((event, idx) => 
                 <>
                     <Divider className={styles.divider}/>
-                    <EventNote isSignedUp={event.isSignedUp} name={event.name} time={event.time} category={event.category}></EventNote>
+                    <EventNote isSignedUp={event.isSignedUp} name={event.name} time={event.time} category={event.category} id={event.id}></EventNote>
                     {idx === events.length - 1 && <Divider className={styles.divider}/>}
                 </>
             )}
