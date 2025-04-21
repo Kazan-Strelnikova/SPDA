@@ -7,6 +7,7 @@ import { EventNoteProps } from "../event-note/event-note";
 import styles from "./calendar.module.scss"
 import { UUID } from "crypto";
 import { UserContext } from "../../contexts/UserContext";
+import { getDateString } from "../../utils/get-date-string";
 
 interface CalendarProps {
     from : Date;
@@ -110,11 +111,18 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
                     const incl = visitedEventIds?.includes(evt.id)
                     console.log(incl, visitedEventIds, user?.email)
                     return {
-                        id: evt.id,
-                        isSignedUp: incl == undefined ? false : incl,
-                        name: evt.title,
-                        time: evt.date.toTimeString().slice(0, 5),
-                        category: evt.type,
+                      isSignedUp: incl == undefined ? false : incl,
+                      event: {
+                          id: evt.id,
+                          title: evt.title,
+                          name: evt.title,
+                          date: getDateString(evt.date),
+                          time: evt.date.toTimeString().slice(0, 5),
+                          category: evt.type,
+                          description: evt.description,
+                          location: evt.location,
+                          seats: evt.has_unlimited_seats ? -1: evt.available_seats,
+                        }
                     }
                 }
             )} />

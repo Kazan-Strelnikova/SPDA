@@ -21,10 +21,10 @@ export const CalendarDay : FC<CalendarDayProps> = ({day, events}) => {
                 <Divider className={styles.divider}/>
                 <Typography variant="body2" className={styles.noEventsTypography}>События отсутствуют</Typography>
             </>
-            : events.map((event, idx) => 
+            : events.map((eventProp, idx) => 
                 <>
                     <Divider className={styles.divider}/>
-                    <EventNote isSignedUp={event.isSignedUp} name={event.name} time={event.time} category={event.category} id={event.id}></EventNote>
+                    <EventNote isSignedUp={eventProp.isSignedUp} event={eventProp.event}></EventNote>
                     {idx === events.length - 1 && <Divider className={styles.divider}/>}
                 </>
             )}

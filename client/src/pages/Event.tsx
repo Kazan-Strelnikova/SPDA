@@ -1,35 +1,31 @@
-import { useParams } from "react-router-dom";
-
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { getEventById } from "../http/get-event-by-id";
-import { Event } from "../types";
+import { getCategoryIcon } from "../utils/get-category-icon";
+import { EventProps } from "../components/event-note/event-note";
+import variables from '../variables.module.scss';
+import CalendarIcon from '../assets/calendar.svg';
+import TimeIcon from '../assets/time.svg';
+import SeatsIcon from '../assets/seats.svg';
+import PlaceIcon from '../assets/place.svg';
 
-interface EventProps {
-    eventId: `${string}-${string}-${string}-${string}-${string}`;
+import {
+  MapContainer,
+  Marker,
+  TileLayer,
+} from "react-leaflet";
+
+interface EventModalProps {
+    event: EventProps;
     open: boolean;
     handleClose: () => void;
 }
 
-export const EventPage : React.FC<EventProps> = ({eventId, open, handleClose} : EventProps) => {
-    const [event, setEvent] = React.useState<Event>();
 
-    React.useEffect(
-        ()=>{(async function fun() {
-            try {
-                setEvent(await getEventById(eventId))
-            } catch (err: any) {
-                console.log("caught exception", err)
-            }
-        })()}
-    ,[])
-
+export const EventModal : React.FC<EventModalProps> = ({event, open, handleClose} : EventModalProps) => {
     return (
         <>
-        <div>HEhe {eventId}</div>
         <Modal
         open={open}
         onClose={handleClose}
@@ -37,12 +33,58 @@ export const EventPage : React.FC<EventProps> = ({eventId, open, handleClose} : 
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
+          <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%'}}>
+          <Typography id="modal-modal-title" variant="subtitle1" fontWeight={600}>
             {event?.title}
           </Typography>
-          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-          </Typography>
+          {getCategoryIcon(event.category)}
+          </Box>
+          <Box sx={{display: 'flex', flexDirection: 'column', width: '100%', gap: '10px'}}>
+            <Typography variant='body2'>
+              {event.description}
+            </Typography>
+            <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center'}}>
+              <img src={CalendarIcon} alt="Calendar" />
+              <Typography variant='body2'>
+                {event.date}
+              </Typography>
+            </Box>
+            <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center'}}>
+              <img src={TimeIcon} alt="Time" />
+              <Typography variant='body2'>
+                {event.time}
+              </Typography>
+            </Box>
+            <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center'}}>
+              <img src={SeatsIcon} alt="Seats" />
+              <Typography variant='body2'>
+                {event.seats === -1 ? 'Количество мест не ограничено' : `Осталось свободных мест: ${event.seats}`}
+              </Typography>
+            </Box>
+            {event.location && <Box sx={{display: 'flex', flexDirection: 'column', width: '100%', gap: '5px', alignItems: 'center'}}>
+            <Box sx={{display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center'}}>
+              <img src={PlaceIcon} alt="Place" />
+              <Typography variant='body2'>
+                Локация
+              </Typography>
+              </Box>
+              <MapContainer
+                    center={event.location}
+                    zoom={15}
+                    style={{ height: "300px", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution='&copy; OpenStreetMap contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker
+                      key={event.id}
+                      position={[event.location[0], event.location[1]]}
+                    />
+                  </MapContainer>
+            </Box>}
+
+          </Box>
         </Box>
       </Modal>
         </>
@@ -55,35 +97,13 @@ const style = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
+  bgcolor: variables.background,
+  borderRadius: '12px',
+  p: '25px',
+  BorderInner: 'none',
+  outline: 'none',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  boxShadow: '0 4px 16px rgba(29,51,113, 0.4)',
 };
-
-export default function BasicModal() {
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-
-  return (
-    <div>
-      <Button onClick={handleOpen}>Open modal</Button>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Text in a modal
-          </Typography>
-          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-          </Typography>
-        </Box>
-      </Modal>
-    </div>
-  );
-}

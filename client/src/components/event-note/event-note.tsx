@@ -1,27 +1,41 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Category } from "../../types";
 import styles from "./event-note.module.scss"
 import { Typography } from "@mui/material";
 import { getCategoryIcon } from "../../utils/get-category-icon";
 import { useNavigate } from "react-router-dom";
+import { EventModal } from "../../pages/Event";
 
-export interface EventNoteProps {
+export interface EventProps {
     id: string;
-    isSignedUp : boolean;
+    title: string;
+    date: string;
     time : string;
     name : string;
     category : Category;
+    description?: string;
+    location: [number, number];
+    seats: number;
 }
 
-export const EventNote : FC<EventNoteProps> = (props) => {
-    const navigate = useNavigate();
+export interface EventNoteProps {
+    isSignedUp : boolean;
+    event: EventProps;
+}
+
+export const EventNote : FC<EventNoteProps> = ({isSignedUp, event}) => {
+    const [open, setOpen] = useState<boolean>(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
     return (<>
-        <div className={`${styles.eventNote} ${props.isSignedUp ? styles.background : ""}`} onClick={() => {navigate(`/event/${props.id}`)}}>
+        <div className={`${styles.eventNote} ${isSignedUp ? styles.background : ""}`} onClick={handleOpen}>
             <div className={styles.top}>
-                <Typography variant="subtitle2" className={styles.timeCaption}>{props.time}</Typography>
-                {getCategoryIcon(props.category)}
+                <Typography variant="subtitle2" className={styles.timeCaption}>{event.time}</Typography>
+                {getCategoryIcon(event.category)}
             </div>
-            <Typography  variant="subtitle2" className={styles.titleCaption}>{props.name}</Typography>
+            <Typography  variant="subtitle2" className={styles.titleCaption}>{event.name}</Typography>
         </div>
+        <EventModal event={event} open={open} handleClose={handleClose}/>
     </>);
 }  
