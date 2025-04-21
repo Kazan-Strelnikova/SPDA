@@ -44,6 +44,6 @@ export const MainPage : React.FC = () => {
             </Button>
         </div>
         <Calendar from={today} setFrom={setToday}/>
-        <EventMap after={new Date(today.getTime() - 3 * oneDayMs)} before={new Date(today.getTime() + 3 * oneDayMs)}/>
+        <EventMap after={new Date(today.getTime() - 4 * oneDayMs)} before={new Date(today.getTime() + 4 * oneDayMs)}/>
     </div>;
 }

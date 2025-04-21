@@ -98,9 +98,9 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
             {dayBuckets.map((dayEvents, idx) => <CalendarDay 
             
             day={
-                (idx + after.getDate()) > getDaysInMonth(after) 
-                ? (idx + after.getDate()) % getDaysInMonth(after) 
-                : (idx + after.getDate())
+                (idx + after.getDate() + 1) > getDaysInMonth(after) 
+                ? (idx + after.getDate() + 1) % getDaysInMonth(after) 
+                : (idx + after.getDate() + 1)
             } 
             
             events={dayEvents
