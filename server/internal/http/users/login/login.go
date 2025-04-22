@@ -61,8 +61,8 @@ func New(log *slog.Logger, service UserService, timeout time.Duration) func(c *g
 			Value:    token,
 			MaxAge:   3600 * 24 * 365,
 			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
+			Secure:   false,
+			HttpOnly: false,
 			SameSite: http.SameSiteNoneMode,
 		})
 		
