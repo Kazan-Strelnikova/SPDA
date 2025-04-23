@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -30,6 +30,7 @@ export default function LocationPicker({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         });
+
       },
       () => {
         setPosition({ lat: 40.7128, lng: -74.006 });
@@ -37,24 +38,29 @@ export default function LocationPicker({
     );
   }, []);
 
+  useEffect(() => {
+    if (position){
+      onLocationChange(position);
+    }
+  }, [position]);
+
   function LocationMarker() {
     useMapEvents({
       click(e: any) {
         const { lat, lng } = e.latlng;
         setPosition({ lat, lng });
-        onLocationChange({ lat, lng });
       },
     });
 
     return position ? <Marker position={position} /> : null;
   }
 
-  return position ? ( // я починил, не хватало пакета с их типапи @types/react-leaflet
+  return position ? (
     <div style={{ height: '400px', width: '100%' }}>
         <MapContainer
-        center={position as LatLngExpression}   // Так странно, у них в доке есть все эти поля в примерах, а уменя ругается
-        zoom={13} //версия другая мож  https://react-leaflet.js.org/docs/api-map/
-        scrollWheelZoom={false} // v5.x, у нас 5.0.0 
+        center={position as LatLngExpression}
+        zoom={13}
+        scrollWheelZoom={false}
         style={{ height: "400px", width: "100%" }}
         >
         <TileLayer

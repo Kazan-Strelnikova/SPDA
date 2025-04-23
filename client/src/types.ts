@@ -24,7 +24,7 @@ export interface Event {
     available_seats: number;
     creator_email: string;
     location: [number, number];
-    has_unlimited_seats: string;
+    has_unlimited_seats: boolean;
     description?: string;
 }
 

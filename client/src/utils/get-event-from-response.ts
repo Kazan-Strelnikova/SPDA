@@ -11,8 +11,8 @@ export const getEventFromResponse = (data : EventResponse): Event => {
         available_seats: data.available_seats,
         creator_email: data.creator_email,
         location: data.location,
-        has_unlimited_seats: data.has_unlimited_seats,
-        description: data.description == "" ? undefined : data.description,
+        has_unlimited_seats: data.has_unlimited_seats === "true" ? true : false,
+        description: data.description === "" ? undefined : data.description,
     }
 }
 

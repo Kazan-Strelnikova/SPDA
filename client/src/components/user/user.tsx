@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import { ButtonAKAM } from '../button/button';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { getUserByToken } from '../../http/get-user-by-token';
 
 
 const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -35,12 +36,21 @@ export const User : React.FC = () => {
   }
   const { user, setUser } = userContext;
 
-  // useEffect(() => setUser({id: '1', name: "Константин", lastName: 'Константинов', email: 'justcoolestgiraffe9@gmail.com'}), [setUser]);
-  
   function handleLogOut(){
-    setUser(null);
     Cookies.remove('token');
+    setUser(undefined);
+    navigate('/');
   }
+
+  useEffect(()=> console.log(user), [user])
+
+  useEffect(()=>{
+    if(!user && Cookies.get('token')){
+        getUserByToken().then(
+          res => setUser(res)
+        ).catch();
+      }
+  }, [setUser, user]);
 
   return (
     user ? 

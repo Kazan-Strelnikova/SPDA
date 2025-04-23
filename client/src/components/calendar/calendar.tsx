@@ -24,7 +24,7 @@ function getDaysInMonth(date: Date): number {
 export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
     const [dayBuckets, setDayBuckets] = useState<Event[][]>([]);
     const [visitedEventIds, setVisitedEventIds] = useState<UUID[]>();
-    const [after, setAfter] = useState<Date>(from)
+    const [after, setAfter] = useState<Date>(from);
     const [before, setBefore] = useState<Date>(() => {
         const copy = new Date(from);
         copy.setDate(copy.getDate() + 7);
@@ -97,6 +97,7 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
         }} />
         <div className={styles.calendarBox}>
             {dayBuckets.map((dayEvents, idx) => <CalendarDay 
+            key={(idx + after.getDate() + 1)}
             
             day={
                 (idx + after.getDate() + 1) > getDaysInMonth(after) 
@@ -106,10 +107,8 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
             
             events={dayEvents
               .sort((a, b) => a.date.getTime() - b.date.getTime())
-              .map<EventNoteProps>(
-                function(evt, _idx, _arr): EventNoteProps {
+              .map<EventNoteProps>(evt => {
                     const incl = visitedEventIds?.includes(evt.id)
-                    console.log(incl, visitedEventIds, user?.email)
                     return {
                       isSignedUp: incl == undefined ? false : incl,
                       event: {
@@ -121,8 +120,9 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
                           category: evt.type,
                           description: evt.description,
                           location: evt.location,
-                          seats: evt.has_unlimited_seats ? -1: evt.available_seats,
-                        }
+                          seats: evt.has_unlimited_seats ? -1 : evt.available_seats,
+                        },
+                        createdByUser: evt.creator_email === user?.email,
                     }
                 }
             )} />

@@ -3,7 +3,6 @@ import { Category } from "../../types";
 import styles from "./event-note.module.scss"
 import { Typography } from "@mui/material";
 import { getCategoryIcon } from "../../utils/get-category-icon";
-import { useNavigate } from "react-router-dom";
 import { EventModal } from "../../pages/Event";
 
 export interface EventProps {
@@ -21,9 +20,10 @@ export interface EventProps {
 export interface EventNoteProps {
     isSignedUp : boolean;
     event: EventProps;
+    createdByUser?: boolean;
 }
 
-export const EventNote : FC<EventNoteProps> = ({isSignedUp, event}) => {
+export const EventNote : FC<EventNoteProps> = ({isSignedUp, event, createdByUser}) => {
     const [open, setOpen] = useState<boolean>(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -36,6 +36,6 @@ export const EventNote : FC<EventNoteProps> = ({isSignedUp, event}) => {
             </div>
             <Typography  variant="subtitle2" className={styles.titleCaption}>{event.name}</Typography>
         </div>
-        <EventModal event={event} open={open} handleClose={handleClose}/>
+        <EventModal event={event} open={open} handleClose={handleClose} isSignedUp={isSignedUp} createdByUser={createdByUser}/>
     </>);
 }  

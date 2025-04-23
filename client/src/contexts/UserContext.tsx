@@ -1,28 +1,27 @@
-import React, { createContext, useState, ReactNode } from "react";
+import React, { createContext, useState, ReactNode, useEffect } from "react";
+import { getUserByToken } from "../http/get-user-by-token";
+import Cookies from 'js-cookie';
 
-// Define User Type
 export interface User {
   name: string;
   lastName: string;
   email: string;
 }
 
-// Define Context Type
 interface UserContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
+  user: User | undefined;
+  setUser: (user: User | undefined) => void;
 }
 
-// Create Context with Default Values
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Create Provider Component
 interface UserProviderProps {
   children: ReactNode;
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | undefined>();
+  
 
   return (
     <UserContext.Provider value={{ user, setUser }}>

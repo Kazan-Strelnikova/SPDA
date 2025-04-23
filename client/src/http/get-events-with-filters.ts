@@ -34,7 +34,7 @@ export const getEventsWithFilters = async (filters: Filters): Promise<Event[]> =
 
         console.log(params, filters.visitorEmail)
 
-        const response = await axios.get<EventResponse[]>(`https://178.236.23.92/team-1/events`, {
+        const response = await axios.get<EventResponse[]>(`/api/events`, {
             headers: {
             "Content-Type": "application/json",
             },

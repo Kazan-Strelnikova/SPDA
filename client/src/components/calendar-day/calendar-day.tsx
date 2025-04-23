@@ -13,7 +13,6 @@ export const CalendarDay : FC<CalendarDayProps> = ({day, events}) => {
     <div className={styles.calendarDay}>
         
         <Chip className={styles.dayIndex} label={day}/>
-        
         <div className={styles.eventsContainer}>
             {events.length <= 0 
             ? 
@@ -23,9 +22,9 @@ export const CalendarDay : FC<CalendarDayProps> = ({day, events}) => {
             </>
             : events.map((eventProp, idx) => 
                 <>
-                    <Divider className={styles.divider}/>
-                    <EventNote isSignedUp={eventProp.isSignedUp} event={eventProp.event}></EventNote>
-                    {idx === events.length - 1 && <Divider className={styles.divider}/>}
+                    <Divider key={'devider'+ idx} className={styles.divider}/>
+                    <EventNote key={eventProp.event.id} isSignedUp={eventProp.isSignedUp} event={eventProp.event} createdByUser={eventProp.createdByUser}></EventNote>
+                    {idx === events.length - 1 && <Divider key={'devider'+ idx + "next"} className={styles.divider}/>}
                 </>
             )}
         </div>

@@ -15,15 +15,18 @@ import {
   Marker,
   TileLayer,
 } from "react-leaflet";
+import { ButtonAKAM } from '../components/button/button';
 
 interface EventModalProps {
     event: EventProps;
     open: boolean;
     handleClose: () => void;
+    isSignedUp?: boolean;
+    createdByUser?: boolean;
 }
 
 
-export const EventModal : React.FC<EventModalProps> = ({event, open, handleClose} : EventModalProps) => {
+export const EventModal : React.FC<EventModalProps> = ({event, open, handleClose, isSignedUp=false, createdByUser=false} : EventModalProps) => {
     return (
         <>
         <Modal
@@ -85,6 +88,17 @@ export const EventModal : React.FC<EventModalProps> = ({event, open, handleClose
             </Box>}
 
           </Box>
+          <Box sx={{display: 'flex', flexDirection: 'row', gap: '15px', alignItems: 'center'}}>
+            {createdByUser ? <>
+              <ButtonAKAM outlined>Удалить</ButtonAKAM>
+              <ButtonAKAM filled>Изменить</ButtonAKAM>
+            </> :
+            (isSignedUp ? 
+              <ButtonAKAM outlined>Отменить запись</ButtonAKAM>
+              :
+              <ButtonAKAM filled>Зарегистрироваться</ButtonAKAM>
+            )}
+          </Box>
         </Box>
       </Modal>
         </>
@@ -106,4 +120,5 @@ const style = {
   flexDirection: 'column',
   gap: '10px',
   boxShadow: '0 4px 16px rgba(29,51,113, 0.4)',
+  alignItems: 'end',
 };

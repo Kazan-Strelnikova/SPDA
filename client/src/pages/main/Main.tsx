@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EventMap } from "../../components/events-map/events-map";
 
+
 function getMonth(date: Date): string {
     switch (date.getMonth()) {
         default:
@@ -22,15 +23,19 @@ function getMonth(date: Date): string {
         case 9: return "Октябрь"
         case 10: return "Ноябрь"
         case 11: return "Декабрь"
-    }
-}
+    };
+};
 
 const oneDayMs = 24 * 60 * 60 * 1000;
 
 export const MainPage : React.FC = () => {
+    const [today, setToday] = useState<Date>(new Date());
+    console.log(today.getDay())
 
-    const [today, setToday] = useState<Date>(new Date())
-    const navigate = useNavigate()
+
+
+    const navigate = useNavigate();
+
 
     return <div>
         <div className={styles.eventBar}>
