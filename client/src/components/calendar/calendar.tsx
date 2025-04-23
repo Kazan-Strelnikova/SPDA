@@ -74,9 +74,6 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
                     after: after,
                     visitorEmail: user == undefined ? "." : user.email,
                   })).map(evt => evt.id))
-                const copy = new Date(after);
-                copy.setDate(copy.getDate() + 3);
-                setFrom(copy)
             } catch (err: any) {
                 console.log("caught exception", err)
             }
@@ -94,15 +91,16 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
 
             setAfter(newAfter);
             setBefore(newBefore);
+            setFrom(newAfter);
         }} />
         <div className={styles.calendarBox}>
             {dayBuckets.map((dayEvents, idx) => <CalendarDay 
-            key={(idx + after.getDate() + 1)}
+            key={(idx + after.getDate())}
             
             day={
-                (idx + after.getDate() + 1) > getDaysInMonth(after) 
-                ? (idx + after.getDate() + 1) % getDaysInMonth(after) 
-                : (idx + after.getDate() + 1)
+                (idx + after.getDate()) > getDaysInMonth(after) 
+                ? (idx + after.getDate()) % getDaysInMonth(after) 
+                : (idx + after.getDate())
             } 
             
             events={dayEvents
@@ -137,6 +135,7 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
 
             setAfter(newAfter);
             setBefore(newBefore);
+            setFrom(newAfter);
         }} />
     </div>)
 }

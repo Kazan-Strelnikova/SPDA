@@ -1,6 +1,4 @@
-import React, { createContext, useState, ReactNode, useEffect } from "react";
-import { getUserByToken } from "../http/get-user-by-token";
-import Cookies from 'js-cookie';
+import React, { createContext, useState, ReactNode } from "react";
 
 export interface User {
   name: string;

@@ -6,7 +6,7 @@ export const Header : React.FC = () => {
     return (
     <header className={styles.root}>
         <Typography variant='h4'className={styles.title}>
-            Крутой тайтл
+            Eventify
         </Typography>
         
         <User/>
