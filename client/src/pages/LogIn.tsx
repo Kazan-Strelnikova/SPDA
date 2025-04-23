@@ -12,7 +12,7 @@ export const LogInPage: React.FC = () => {
     if (!userContext) {
         throw new Error("Log must be used within a UserProvider");
     }
-    const { user, setUser } = userContext;
+    const { setUser } = userContext;
 
     const [error, setError] = useState<string>('');
     const [formData, setFormData] = useState({

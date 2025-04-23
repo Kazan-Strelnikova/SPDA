@@ -6,13 +6,12 @@ import {
   TileLayer,
   useMapEvents,
 } from "react-leaflet";
-import { LatLng } from "leaflet";
 import { Event } from "../../types";
 import { getEventsWithFilters } from "../../http/get-events-with-filters";
 
 interface EventMapProps {
-  after?: Date;
-  before?: Date;
+  before : Date;
+  after : Date;
 }
 
 const ZOOM_RADIUS_MAP: Record<number, number> = {
@@ -41,7 +40,7 @@ function MapLocationUpdater({
   return null;
 }
 
-export const EventMap = ({ after, before }: EventMapProps) => {
+export const EventMap = ({ before, after }: EventMapProps) => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [geoFilters, setGeoFilters] = useState<{ lat: number; lon: number; radius: number } | null>(null);
@@ -77,6 +76,7 @@ export const EventMap = ({ after, before }: EventMapProps) => {
           before,
         });
         setEvents(fetched);
+        console.log(fetched)
       } catch (e) {
         console.error("Failed to fetch events:", e);
       }
@@ -88,10 +88,10 @@ export const EventMap = ({ after, before }: EventMapProps) => {
   if (!userLocation) return <p>Loading map...</p>;
 
   return (
-    <MapContainer
+          <MapContainer
       center={userLocation}
       zoom={13}
-      style={{ height: "100vh", width: "100%" }}
+      style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'

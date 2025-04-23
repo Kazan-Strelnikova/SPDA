@@ -1,5 +1,4 @@
-import { NavigateBefore, NavigateNext } from "@mui/icons-material";
-import { Dispatch, FC, SetStateAction, useContext, useEffect, useState } from "react"
+import { FC, useContext, useEffect, useState } from "react"
 import { getEventsWithFilters } from "../../http/get-events-with-filters";
 import { Event } from "../../types";
 import { CalendarDay } from "../calendar-day/calendar-day";
@@ -10,8 +9,8 @@ import { UserContext } from "../../contexts/UserContext";
 import { getDateString } from "../../utils/get-date-string";
 
 interface CalendarProps {
-    from : Date;
-    setFrom : Dispatch<SetStateAction<Date>>
+    before : Date;
+    after : Date;
 }
 
 function getDaysInMonth(date: Date): number {
@@ -21,22 +20,16 @@ function getDaysInMonth(date: Date): number {
 }
 
 
-export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
+export const Calendar : FC<CalendarProps> = ({before, after}) => {
     const [dayBuckets, setDayBuckets] = useState<Event[][]>([]);
     const [visitedEventIds, setVisitedEventIds] = useState<UUID[]>();
-    const [after, setAfter] = useState<Date>(from);
-    const [before, setBefore] = useState<Date>(() => {
-        const copy = new Date(from);
-        copy.setDate(copy.getDate() + 7);
-        return copy;
-    });
       
 
     const userContext = useContext(UserContext);
     if (!userContext) {
         throw new Error("Calendar must be used within a UserProvider");
     }
-    const { user, setUser } = userContext;
+    const { user } = userContext;
   
     useEffect(() => {
       (async function fetchEvents() {
@@ -72,7 +65,7 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
                 setVisitedEventIds((await getEventsWithFilters({
                     before: before,
                     after: after,
-                    visitorEmail: user == undefined ? "." : user.email,
+                    visitorEmail: user === undefined ? "." : user.email,
                   })).map(evt => evt.id))
             } catch (err: any) {
                 console.log("caught exception", err)
@@ -81,18 +74,6 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
     ,[user, before, after])
 
     return (
-    <div className={styles.calendar}>
-        <NavigateBefore onClick={() => {
-            const newAfter = new Date(after);
-            newAfter.setDate(newAfter.getDate() - 7);
-
-            const newBefore = new Date(before);
-            newBefore.setDate(newBefore.getDate() - 7);
-
-            setAfter(newAfter);
-            setBefore(newBefore);
-            setFrom(newAfter);
-        }} />
         <div className={styles.calendarBox}>
             {dayBuckets.map((dayEvents, idx) => <CalendarDay 
             key={(idx + after.getDate())}
@@ -108,7 +89,7 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
               .map<EventNoteProps>(evt => {
                     const incl = visitedEventIds?.includes(evt.id)
                     return {
-                      isSignedUp: incl == undefined ? false : incl,
+                      isSignedUp: incl === undefined ? false : incl,
                       event: {
                           id: evt.id,
                           title: evt.title,
@@ -125,17 +106,5 @@ export const Calendar : FC<CalendarProps> = ({from, setFrom}) => {
                 }
             )} />
             )}
-        </div>
-        <NavigateNext onClick={() => {
-            const newAfter = new Date(after);
-            newAfter.setDate(newAfter.getDate() + 7);
-
-            const newBefore = new Date(before);
-            newBefore.setDate(newBefore.getDate() + 7);
-
-            setAfter(newAfter);
-            setBefore(newBefore);
-            setFrom(newAfter);
-        }} />
-    </div>)
+        </div>)
 }

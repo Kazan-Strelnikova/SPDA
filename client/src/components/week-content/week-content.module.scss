@@ -1,0 +1,37 @@
+@import '../../variables.module.scss';
+
+.weekCont{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+    padding: 15px 0;
+
+    .week {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .map{
+        height: 65vh;
+    }
+    
+    .calendar{
+        min-height: 600px;
+    }
+    .weekHeader {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
+
+        .monthCaption {
+            text-transform: uppercase;
+            color: $text-secondary;
+        }
+    }
+}

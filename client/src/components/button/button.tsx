@@ -2,9 +2,6 @@ import { Button } from "@mui/material";
 import styles from './button.module.scss';
 import { MouseEventHandler, ReactNode } from "react";
 
-
-type ButtonVariant = 'filled' | 'outlined';
-
 interface ButtonProps {
     filled?: boolean;
     outlined?: boolean;

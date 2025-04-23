@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -56,12 +56,12 @@ export default function LocationPicker({
   }
 
   return position ? (
-    <div style={{ height: '400px', width: '100%' }}>
+    <div style={{ height: '360px', width: '480px', zIndex: 0 }}>
         <MapContainer
         center={position as LatLngExpression}
         zoom={13}
         scrollWheelZoom={false}
-        style={{ height: "400px", width: "100%" }}
+        style={{ height: "100%", width: "100%" }}
         >
         <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'

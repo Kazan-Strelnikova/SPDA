@@ -1,21 +1,13 @@
 @import '../../variables.module.scss';
 
-.calendar {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    min-height: 600px;
-    height: auto;
-    gap: 10px;
 
-    .calendarBox{
-        align-items: start;
-        display: flex;
-        min-height: 600px;
-        height: 100%;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-    }
+.calendarBox{
+    align-items: start;
+    display: flex;
+    min-height: 600px;
+    height: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
 }
+

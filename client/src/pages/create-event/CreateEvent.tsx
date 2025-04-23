@@ -1,4 +1,4 @@
-import { styled, TextField, Typography } from "@mui/material";
+import { styled, Switch, TextField, Typography } from "@mui/material";
 import React, { ChangeEvent, FC, useContext, useState } from "react";
 import BackIcon from "../../assets/back.svg";
 import style from "./CreateEvent.module.scss";
@@ -24,7 +24,7 @@ import {
 } from "@mui/base";
 import { PickerValue } from "@mui/x-date-pickers/internals";
 import { ButtonAKAM } from "../../components/button/button";
-import LocationPicker  from "../../components/location-picker/location-picker"
+import LocationPicker from "../../components/location-picker/location-picker"
 import { postEvent } from "../../http/post-event";
 import { UserContext } from "../../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -32,11 +32,17 @@ import { useNavigate } from "react-router-dom";
 export const CreateEventPage: FC = () => {
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const [evt, setEvt] = useState<Event>();
+  const [checked, setChecked] = React.useState(true);
+
+  const handleChangeSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChecked(event.target.checked);
+  };
+
   const userContext = useContext(UserContext);
   if (!userContext) {
-      throw new Error("Calendar must be used within a UserProvider");
+    throw new Error("Calendar must be used within a UserProvider");
   }
-  const { user, setUser } = userContext;
+  const { user } = userContext;
 
   const navigate = useNavigate()
 
@@ -44,10 +50,10 @@ export const CreateEventPage: FC = () => {
     return () =>
       setEvt(
         (prev) =>
-          ({
-            ...prev,
-            type: menuItem,
-          } as Event)
+        ({
+          ...prev,
+          type: menuItem,
+        } as Event)
       );
   };
 
@@ -98,77 +104,90 @@ export const CreateEventPage: FC = () => {
   };
 
 
-  const handleSave = () => {( async function() {
-    try {
-      const code = await postEvent(evt as Event, user?.email ?? "")
-      if (code >= 400) {
-        alert("Could not save event")
-        return
-      }
+  const handleSave = () => {
+    (async function () {
+      try {
+        const code = await postEvent(evt as Event, user?.email ?? "")
+        if (code >= 400) {
+          alert("Could not save event")
+          return
+        }
 
-      navigate("/")
-    } catch (err: any) {
-      alert("Could not save event")
-    }
-  })()}
+        navigate("/")
+      } catch (err: any) {
+        alert("Could not save event")
+      }
+    })()
+  }
 
   return (
     <div className={style.page}>
       <div className={style.label}>
-        <img src={BackIcon} alt="back" />
+        <img src={BackIcon} alt="back" onClick={() => navigate(-1)} style={{ cursor: 'pointer' }} />
         <Typography variant="h5"> Новое Событие </Typography>
       </div>
 
       <div className={style.box}>
         <div className={style.inputs}>
+        <div className={style.vertical}>
           <TextField
             className={menuOpen ? style.clipped : ""}
-            margin="normal"
+            margin="none"
             id="title"
             label="Название"
             name="title"
-            autoFocus
+            style={{ width: "420px" }}
             value={evt?.title}
             onChange={handleChange}
             variant="outlined"
           />
           <TextField
             className={menuOpen ? style.clipped : ""}
-            margin="normal"
+            margin="none"
             id="description"
             label="Описание"
             name="description"
-            autoFocus
+            style={{ width: "420px" }}
             value={evt?.description}
             onChange={handleChange}
             variant="outlined"
             multiline
             minRows={5}
           />
-          <TextField
-            className={menuOpen ? style.clipped : ""}
-            margin="normal"
-            id="seats"
-            label="Количество мест"
-            name="total_seats"
-            autoFocus
-            value={evt?.total_seats}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              if (/^\d*$/.test(newValue)) {
-                handleChange(e as ChangeEvent<HTMLInputElement>);
-              }
-            }}
-            variant="outlined"
-            helperText="от 1 до 150 000"
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: "10px", width: '420px', height: '56px'}}>
+            <Switch aria-label="switch" checked={checked} onChange={handleChangeSwitch} />
+            {checked ? "Неограниченное количество мест" :
+              <TextField
+                className={menuOpen ? style.clipped : ""}
+                margin="none"
+                id="seats"
+                label="Количество мест"
+                name="total_seats"
+                value={evt?.total_seats}
+                style={{height: '56px'}}
+                fullWidth
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  if (/^\d*$/.test(newValue)) {
+                    handleChange(e as ChangeEvent<HTMLInputElement>);
+                  }
+                }}
+                variant="outlined"
+                helperText="от 1 до 150 000"
+              />}
+          </div>
+
+        </div>
+        <div className={style.vertical}>
           <Dropdown onOpenChange={() => setMenuOpen((prev) => !prev)}>
-            <MenuButton>
+            <MenuButton
+            sx={{ width: "420px" }}>
               {evt?.type
                 ? Categories.find((value) => value[1] === evt.type)?.[0]
                 : "Категория"}
             </MenuButton>
-            <Menu slots={{ listbox: AnimatedListbox }}>
+            <Menu slots={{ listbox: AnimatedListbox }} 
+            style={{ width: "420px" }}>
               {Categories.map((value, _idx) => {
                 return (
                   <MenuItem onClick={createHandleMenuClick(value[1])}>
@@ -180,25 +199,32 @@ export const CreateEventPage: FC = () => {
           </Dropdown>
 
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker label="Дата" onChange={handleDateChange} />
+            <DatePicker 
+            className={menuOpen ? style.clipped : ""}
+            sx={{ width: "420px" }} label="Дата" onChange={handleDateChange} />
           </LocalizationProvider>
 
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <TimePicker label="Время" onChange={handleTimeChange} />
+            <TimePicker 
+            className={menuOpen ? style.clipped : ""}
+            sx={{ width: "420px" }} label="Время" onChange={handleTimeChange} />
           </LocalizationProvider>
+        </div>
+        
+
+        
+        <LocationPicker onLocationChange={function (coords) {
+          setEvt({
+            ...evt,
+            location: [coords.lat, coords.lng]
+          } as Event);
+          console.log(evt);
+        }} />
+        </div>
+
           <div className={style.submit}>
             <ButtonAKAM onClick={handleSave} filled>Сохранить</ButtonAKAM>
           </div>
-        </div>
-        
-          <LocationPicker onLocationChange={function(coords) {
-            setEvt({
-              ...evt,
-              location: [coords.lat,coords.lng]
-            } as Event);
-            console.log(evt);
-          }}/>
-        
       </div>
     </div>
   );
@@ -244,8 +270,7 @@ const Listbox = styled("ul")(
     background: ${theme.palette.mode === "dark" ? grey[900] : "#fff"};
     border: 1px solid ${theme.palette.mode === "dark" ? grey[700] : grey[200]};
     color: ${theme.palette.mode === "dark" ? grey[300] : grey[900]};
-    box-shadow: 0 4px 30px ${
-      theme.palette.mode === "dark" ? grey[900] : grey[200]
+    box-shadow: 0 4px 30px ${theme.palette.mode === "dark" ? grey[900] : grey[200]
     };
     z-index: 1;
   
@@ -310,12 +335,10 @@ const MenuItem = styled(BaseMenuItem)(
     }
   
     &:focus {
-      outline: 3px solid ${
-        theme.palette.mode === "dark" ? blue[600] : blue[200]
-      };
-      background-color: ${
-        theme.palette.mode === "dark" ? grey[800] : grey[100]
-      };
+      outline: 3px solid ${theme.palette.mode === "dark" ? blue[600] : blue[200]
+    };
+      background-color: ${theme.palette.mode === "dark" ? grey[800] : grey[100]
+    };
       color: ${theme.palette.mode === "dark" ? grey[300] : grey[900]};
     }
   
@@ -350,9 +373,8 @@ const MenuButton = styled(BaseMenuButton)(
     }
   
     &:focus-visible {
-      box-shadow: 0 0 0 4px ${
-        theme.palette.mode === "dark" ? blue[300] : blue[200]
-      };
+      box-shadow: 0 0 0 4px ${theme.palette.mode === "dark" ? blue[300] : blue[200]
+    };
       outline: none;
     }
     `

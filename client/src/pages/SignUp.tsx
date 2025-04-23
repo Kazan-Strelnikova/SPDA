@@ -12,7 +12,7 @@ export const SignUpPage: React.FC = () => {
     if (!userContext) {
         throw new Error("Log must be used within a UserProvider");
     }
-    const { user, setUser } = userContext;
+    const { setUser } = userContext;
 
     const [formData, setFormData] = useState({
         name: '',
