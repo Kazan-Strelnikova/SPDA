@@ -61,5 +61,6 @@
   "devDependencies": {
     "@types/js-cookie": "^3.0.6"
   },
-  "proxy": "https://178.236.23.92/team-1"
+  "proxy": "https://178.236.23.92/team-1",
+  "homepage": "/eventify"
 }

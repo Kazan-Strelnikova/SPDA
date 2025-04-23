@@ -4,7 +4,7 @@ import { Categories, Event } from "../types";
 export const postEvent = async function(evt: Event, email: string): Promise<number> {
     try {
         console.log(evt.total_seats.valueOf())
-        const response = await axios.post("/api/events", 
+        const response = await axios.post("/team-1/events", 
             {
                 title: evt.title,
                 type: evt?.type ? Categories.findIndex((value) => value[1] === evt.type) : 8,

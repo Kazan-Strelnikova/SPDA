@@ -4,7 +4,7 @@ import { getUserFromLoginResponse } from "../utils/get-user-from-login-response"
 
 export const postRegisterUser = async function (name: string, last_name: string, email: string, password: string): Promise<User> {
     try {
-        const user = await axios.post("/api/users/signup", 
+        const user = await axios.post("/team-1/users/signup", 
             {   
                 name: name,
                 last_name: last_name,

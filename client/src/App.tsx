@@ -38,7 +38,7 @@ const theme = createTheme({
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
-      <Router>
+      <Router basename="/eventify">
         <UserProvider>
           <div className="App" style={{ padding: "0 140px" }}>
             <Header />

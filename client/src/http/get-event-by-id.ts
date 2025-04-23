@@ -5,7 +5,7 @@ import { getEventFromResponse } from "../utils/get-event-from-response";
 
 export const getEventById = async (id: UUID): Promise<Event> => {
     try {
-      const response = await axios.get<EventResponse>(`/api/events/${id}`, {
+      const response = await axios.get<EventResponse>(`/team-1/events/${id}`, {
         headers: {
           "Content-Type": "application/json",
         },
