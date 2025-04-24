@@ -8,10 +8,18 @@ import {
 } from "react-leaflet";
 import { Event } from "../../types";
 import { getEventsWithFilters } from "../../http/get-events-with-filters";
+import { EventCont, EventModal } from "../../pages/Event";
+import { getDateString } from "../../utils/get-date-string";
+import { getCategoryIcon } from "../../utils/get-category-icon";
+import { Box, Typography } from "@mui/material";
+import CalendarIcon from '../../assets/calendar.svg';
+import TimeIcon from '../../assets/time.svg';
+import SeatsIcon from '../../assets/seats.svg';
+import styles from './events-map.module.scss';
 
 interface EventMapProps {
-  before : Date;
-  after : Date;
+  before: Date;
+  after: Date;
 }
 
 const ZOOM_RADIUS_MAP: Record<number, number> = {
@@ -45,7 +53,6 @@ export const EventMap = ({ before, after }: EventMapProps) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [geoFilters, setGeoFilters] = useState<{ lat: number; lon: number; radius: number } | null>(null);
 
-  // Get user's location once
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -53,16 +60,16 @@ export const EventMap = ({ before, after }: EventMapProps) => {
           position.coords.latitude,
           position.coords.longitude,
         ]);
+        setGeoFilters({ lat: position.coords.latitude, lon: position.coords.longitude, radius: 1000 });
+
       },
       (err) => {
         console.error("Geolocation error:", err);
-        // fallback location
         setUserLocation([55.751244, 37.618423]); // Moscow
       }
     );
   }, []);
 
-  // Fetch events when filters change
   useEffect(() => {
     if (!geoFilters) return;
 
@@ -85,10 +92,11 @@ export const EventMap = ({ before, after }: EventMapProps) => {
     fetchEvents();
   }, [geoFilters, after, before]);
 
+
   if (!userLocation) return <p>Loading map...</p>;
 
   return (
-          <MapContainer
+    <MapContainer
       center={userLocation}
       zoom={13}
       style={{ height: "100%", width: "100%" }}
@@ -103,10 +111,39 @@ export const EventMap = ({ before, after }: EventMapProps) => {
           key={event.id}
           position={[event.location[0], event.location[1]]}
         >
-          <Popup>
-            <strong>{event.title}</strong>
-            <br />
-            {event.description}
+          <Popup className={styles.popup}>
+            <div>
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <Typography id="modal-modal-title" variant="subtitle1" fontWeight={600}>
+                  {event?.title}
+                </Typography>
+                {getCategoryIcon(event.type)}
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '10px' }}>
+                <Typography variant='body2'>
+                  {event.description}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center' }}>
+                  <img src={CalendarIcon} alt="Calendar" />
+                  <Typography variant='body2'>
+                    {getDateString(event.date)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center' }}>
+                  <img src={TimeIcon} alt="Time" />
+                  <Typography variant='body2'>
+                    {event.date.toTimeString().slice(0, 5)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: '5px', alignItems: 'center' }}>
+                  <img src={SeatsIcon} alt="Seats" />
+                  <Typography variant='body2'>
+                    {event.has_unlimited_seats ? 'Количество мест не ограничено' : `Осталось свободных мест: ${event.available_seats}`}
+                  </Typography>
+                </Box>
+              </Box>
+            </div>
+
           </Popup>
         </Marker>
       ))}

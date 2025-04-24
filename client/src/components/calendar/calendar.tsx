@@ -102,6 +102,7 @@ export const Calendar : FC<CalendarProps> = ({before, after}) => {
                           seats: evt.has_unlimited_seats ? -1 : evt.available_seats,
                         },
                         createdByUser: evt.creator_email === user?.email,
+                        eventObj: evt,
                     }
                 }
             )} />

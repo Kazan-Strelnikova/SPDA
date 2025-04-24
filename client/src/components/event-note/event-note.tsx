@@ -4,6 +4,7 @@ import styles from "./event-note.module.scss"
 import { Typography } from "@mui/material";
 import { getCategoryIcon } from "../../utils/get-category-icon";
 import { EventModal } from "../../pages/Event";
+import { type Event } from "../../types";
 
 export interface EventProps {
     id: string;
@@ -21,9 +22,10 @@ export interface EventNoteProps {
     isSignedUp : boolean;
     event: EventProps;
     createdByUser?: boolean;
+    eventObj: Event;
 }
 
-export const EventNote : FC<EventNoteProps> = ({isSignedUp, event, createdByUser}) => {
+export const EventNote : FC<EventNoteProps> = ({isSignedUp, event, createdByUser, eventObj}) => {
     const [open, setOpen] = useState<boolean>(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -36,6 +38,6 @@ export const EventNote : FC<EventNoteProps> = ({isSignedUp, event, createdByUser
             </div>
             <Typography  variant="subtitle2" className={styles.titleCaption}>{event.name}</Typography>
         </div>
-        <EventModal event={event} open={open} handleClose={handleClose} isSignedUp={isSignedUp} createdByUser={createdByUser}/>
+        <EventModal event={event} open={open} handleClose={handleClose} isSignedUp={isSignedUp} createdByUser={createdByUser} eventObj={eventObj}/>
     </>);
 }  

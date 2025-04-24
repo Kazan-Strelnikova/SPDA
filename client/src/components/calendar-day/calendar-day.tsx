@@ -2,6 +2,7 @@ import { FC } from "react"
 import { EventNote, EventNoteProps } from "../event-note/event-note";
 import styles from "./calendar-day.module.scss"
 import { Chip, Divider, Typography } from "@mui/material";
+import { type Event } from "../../types";
 
 interface CalendarDayProps {
     day : number;
@@ -23,7 +24,7 @@ export const CalendarDay : FC<CalendarDayProps> = ({day, events}) => {
             : events.map((eventProp, idx) => 
                 <>
                     <Divider key={'devider'+ idx} className={styles.divider}/>
-                    <EventNote key={eventProp.event.id} isSignedUp={eventProp.isSignedUp} event={eventProp.event} createdByUser={eventProp.createdByUser}></EventNote>
+                    <EventNote key={eventProp.event.id} isSignedUp={eventProp.isSignedUp} event={eventProp.event} createdByUser={eventProp.createdByUser} eventObj={eventProp.eventObj}></EventNote>
                     {idx === events.length - 1 && <Divider key={'devider'+ idx + "next"} className={styles.divider}/>}
                 </>
             )}

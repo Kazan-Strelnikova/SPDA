@@ -26,23 +26,32 @@ import { PickerValue } from "@mui/x-date-pickers/internals";
 import { ButtonAKAM } from "../../components/button/button";
 import LocationPicker from "../../components/location-picker/location-picker"
 import { postEvent } from "../../http/post-event";
+import { putEvent } from "../../http/put-event";
 import { UserContext } from "../../contexts/UserContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { EventProps } from "../../components/event-note/event-note";
+import { UUID } from "crypto";
 
 export const CreateEventPage: FC = () => {
+  const location = useLocation();
+
+  const { edit, event }: { edit: boolean, event: Event } = location.state ?? {edit: false, event: undefined};
   const [menuOpen, setMenuOpen] = useState<boolean>();
-  const [evt, setEvt] = useState<Event>();
+  const userContext = useContext(UserContext);
+  if (!userContext) {
+    throw new Error("Calendar must be used within a UserProvider");
+  }
+  const { user } = userContext;
+
+  const [evt, setEvt] = useState<Event>(!event || !user?.email ? {} as Event : event);
+
   const [checked, setChecked] = React.useState(true);
 
   const handleChangeSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
   };
 
-  const userContext = useContext(UserContext);
-  if (!userContext) {
-    throw new Error("Calendar must be used within a UserProvider");
-  }
-  const { user } = userContext;
+
 
   const navigate = useNavigate()
 
@@ -107,7 +116,12 @@ export const CreateEventPage: FC = () => {
   const handleSave = () => {
     (async function () {
       try {
-        const code = await postEvent(evt as Event, user?.email ?? "")
+        let code;
+        if (edit){
+          code = await putEvent(evt as Event, user?.email ?? "");
+        } else {
+          code = await postEvent(evt as Event, user?.email ?? "");
+        }
         if (code >= 400) {
           alert("Could not save event")
           return
@@ -124,107 +138,107 @@ export const CreateEventPage: FC = () => {
     <div className={style.page}>
       <div className={style.label}>
         <img src={BackIcon} alt="back" onClick={() => navigate(-1)} style={{ cursor: 'pointer' }} />
-        <Typography variant="h5"> Новое Событие </Typography>
+        {edit ? <Typography variant="h5"> Редактировать Событие </Typography> : <Typography variant="h5"> Новое Событие </Typography>}
       </div>
 
       <div className={style.box}>
         <div className={style.inputs}>
-        <div className={style.vertical}>
-          <TextField
-            className={menuOpen ? style.clipped : ""}
-            margin="none"
-            id="title"
-            label="Название"
-            name="title"
-            style={{ width: "420px" }}
-            value={evt?.title}
-            onChange={handleChange}
-            variant="outlined"
-          />
-          <TextField
-            className={menuOpen ? style.clipped : ""}
-            margin="none"
-            id="description"
-            label="Описание"
-            name="description"
-            style={{ width: "420px" }}
-            value={evt?.description}
-            onChange={handleChange}
-            variant="outlined"
-            multiline
-            minRows={5}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: "10px", width: '420px', height: '56px'}}>
-            <Switch aria-label="switch" checked={checked} onChange={handleChangeSwitch} />
-            {checked ? "Неограниченное количество мест" :
-              <TextField
+          <div className={style.vertical}>
+            <TextField
+              className={menuOpen ? style.clipped : ""}
+              margin="none"
+              id="title"
+              label="Название"
+              name="title"
+              style={{ width: "420px" }}
+              value={evt?.title}
+              onChange={handleChange}
+              variant="outlined"
+            />
+            <TextField
+              className={menuOpen ? style.clipped : ""}
+              margin="none"
+              id="description"
+              label="Описание"
+              name="description"
+              style={{ width: "420px" }}
+              value={evt?.description}
+              onChange={handleChange}
+              variant="outlined"
+              multiline
+              minRows={5}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: "10px", width: '420px', height: '56px' }}>
+              <Switch aria-label="switch" checked={checked} onChange={handleChangeSwitch} />
+              {checked ? "Неограниченное количество мест" :
+                <TextField
+                  className={menuOpen ? style.clipped : ""}
+                  margin="none"
+                  id="seats"
+                  label="Количество мест"
+                  name="total_seats"
+                  value={evt?.total_seats}
+                  style={{ height: '56px' }}
+                  fullWidth
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (/^\d*$/.test(newValue)) {
+                      handleChange(e as ChangeEvent<HTMLInputElement>);
+                    }
+                  }}
+                  variant="outlined"
+                  helperText="от 1 до 150 000"
+                />}
+            </div>
+
+          </div>
+          <div className={style.vertical}>
+            <Dropdown onOpenChange={() => setMenuOpen((prev) => !prev)}>
+              <MenuButton
+                sx={{ width: "420px" }}>
+                {evt?.type
+                  ? Categories.find((value) => value[1] === evt.type)?.[0]
+                  : "Категория"}
+              </MenuButton>
+              <Menu slots={{ listbox: AnimatedListbox }}
+                style={{ width: "420px" }}>
+                {Categories.map((value, _idx) => {
+                  return (
+                    <MenuItem onClick={createHandleMenuClick(value[1])}>
+                      {value[0]}
+                    </MenuItem>
+                  );
+                })}
+              </Menu>
+            </Dropdown>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
                 className={menuOpen ? style.clipped : ""}
-                margin="none"
-                id="seats"
-                label="Количество мест"
-                name="total_seats"
-                value={evt?.total_seats}
-                style={{height: '56px'}}
-                fullWidth
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  if (/^\d*$/.test(newValue)) {
-                    handleChange(e as ChangeEvent<HTMLInputElement>);
-                  }
-                }}
-                variant="outlined"
-                helperText="от 1 до 150 000"
-              />}
+                sx={{ width: "420px" }} label="Дата" value={edit ? event.date : new Date()} onChange={handleDateChange} />
+            </LocalizationProvider>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <TimePicker
+                className={menuOpen ? style.clipped : ""}
+                sx={{ width: "420px" }} label="Время" value={edit ? event.date : new Date()} onChange={handleTimeChange} />
+            </LocalizationProvider>
           </div>
 
-        </div>
-        <div className={style.vertical}>
-          <Dropdown onOpenChange={() => setMenuOpen((prev) => !prev)}>
-            <MenuButton
-            sx={{ width: "420px" }}>
-              {evt?.type
-                ? Categories.find((value) => value[1] === evt.type)?.[0]
-                : "Категория"}
-            </MenuButton>
-            <Menu slots={{ listbox: AnimatedListbox }} 
-            style={{ width: "420px" }}>
-              {Categories.map((value, _idx) => {
-                return (
-                  <MenuItem onClick={createHandleMenuClick(value[1])}>
-                    {value[0]}
-                  </MenuItem>
-                );
-              })}
-            </Menu>
-          </Dropdown>
 
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker 
-            className={menuOpen ? style.clipped : ""}
-            sx={{ width: "420px" }} label="Дата" onChange={handleDateChange} />
-          </LocalizationProvider>
 
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <TimePicker 
-            className={menuOpen ? style.clipped : ""}
-            sx={{ width: "420px" }} label="Время" onChange={handleTimeChange} />
-          </LocalizationProvider>
-        </div>
-        
-
-        
-        <LocationPicker onLocationChange={function (coords) {
-          setEvt({
-            ...evt,
-            location: [coords.lat, coords.lng]
-          } as Event);
-          console.log(evt);
-        }} />
+          <LocationPicker onLocationChange={function (coords) {
+            setEvt({
+              ...evt,
+              location: [coords.lat, coords.lng]
+            } as Event);
+            console.log(evt);
+          }} />
         </div>
 
-          <div className={style.submit}>
-            <ButtonAKAM onClick={handleSave} filled>Сохранить</ButtonAKAM>
-          </div>
+        <div className={style.submit}>
+          <ButtonAKAM onClick={handleSave} filled>Сохранить</ButtonAKAM>
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import axios from "axios";
 import { Categories, Event } from "../types";
 
-export const postEvent = async function(evt: Event, email: string): Promise<number> {
+export const putEvent = async function(evt: Event, email: string): Promise<number> {
     try {
         console.log(evt.total_seats.valueOf())
-        const response = await axios.post("/events", 
+        const response = await axios.put(`/events/${evt.id}`, 
             {
                 title: evt.title,
                 type: evt?.type ? Categories.findIndex((value) => value[1] === evt.type) : 8,
