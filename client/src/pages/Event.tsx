@@ -16,6 +16,10 @@ import {
   TileLayer,
 } from "react-leaflet";
 import { ButtonAKAM } from '../components/button/button';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { deleteEventById } from '../http/delete-event';
+import { UUID } from 'crypto';
+import { useNavigate } from 'react-router-dom';
 
 interface EventModalProps {
     event: EventProps;
@@ -25,6 +29,49 @@ interface EventModalProps {
     createdByUser?: boolean;
 }
 
+function Delete({id}: {id: UUID}) {
+  const navigate = useNavigate();
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleAgreeClose = () => {
+    deleteEventById(id);
+    setOpen(false);
+    window.location.reload();
+  };
+
+  return (
+    <React.Fragment>
+      <ButtonAKAM outlined onClick={handleOpen}>Удалить</ButtonAKAM>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Удалить событие?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            При удалении события его не получится восстановить автоматически
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Отменить</Button>
+          <Button onClick={handleAgreeClose} autoFocus>
+            Подтвердить
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </React.Fragment>
+  );
+}
 
 export const EventModal : React.FC<EventModalProps> = ({event, open, handleClose, isSignedUp=false, createdByUser=false} : EventModalProps) => {
     return (
@@ -90,7 +137,7 @@ export const EventModal : React.FC<EventModalProps> = ({event, open, handleClose
           </Box>
           <Box sx={{display: 'flex', flexDirection: 'row', gap: '15px', alignItems: 'center'}}>
             {createdByUser ? <>
-              <ButtonAKAM outlined>Удалить</ButtonAKAM>
+              <Delete id={event.id as UUID}/>
               <ButtonAKAM filled>Изменить</ButtonAKAM>
             </> :
             (isSignedUp ? 
