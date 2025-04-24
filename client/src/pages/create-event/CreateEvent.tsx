@@ -1,4 +1,4 @@
-import { styled, Switch, TextField, Typography } from "@mui/material";
+import { Box, styled, Switch, TextField, Typography } from "@mui/material";
 import React, { ChangeEvent, FC, useContext, useState } from "react";
 import BackIcon from "../../assets/back.svg";
 import style from "./CreateEvent.module.scss";
@@ -12,6 +12,7 @@ import {
   TimeValidationError,
 } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import variables from '../../variables.module.scss';
 import {
   Dropdown,
   Menu,
@@ -29,8 +30,7 @@ import { postEvent } from "../../http/post-event";
 import { putEvent } from "../../http/put-event";
 import { UserContext } from "../../contexts/UserContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { EventProps } from "../../components/event-note/event-note";
-import { UUID } from "crypto";
+import { ErrorOutlineRounded } from "@mui/icons-material";
 
 export const CreateEventPage: FC = () => {
   const location = useLocation();
@@ -38,16 +38,19 @@ export const CreateEventPage: FC = () => {
   const { edit, event }: { edit: boolean, event: Event } = location.state ?? {edit: false, event: undefined};
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const userContext = useContext(UserContext);
+  const [error, setError] = useState<string>("");
+
   if (!userContext) {
     throw new Error("Calendar must be used within a UserProvider");
   }
   const { user } = userContext;
 
-  const [evt, setEvt] = useState<Event>(!event || !user?.email ? {} as Event : event);
+  const [evt, setEvt] = useState<Event>(!event || !user?.email ? {has_unlimited_seats: true} as Event : event);
 
   const [checked, setChecked] = React.useState(true);
 
   const handleChangeSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if(event.target.checked) {setEvt(prev => ({...prev, has_unlimited_seats: true}));}
     setChecked(event.target.checked);
   };
 
@@ -72,7 +75,6 @@ export const CreateEventPage: FC = () => {
       ...evt,
       [name]: value,
     } as Event);
-    console.log(evt);
   };
 
   const handleDateChange = (
@@ -114,6 +116,17 @@ export const CreateEventPage: FC = () => {
 
 
   const handleSave = () => {
+    // console.log(evt)
+    // if (!evt || evt.title === "" || !evt.type || !evt.date || !evt.location){
+    //   setError("Все обязательные поля должны быть заполнены");
+    //   return;
+    // }
+    // if (!evt.has_unlimited_seats && (evt.available_seats <= 0 || evt.available_seats > 150000)){
+    //   setError("Введите корректное количество мест");
+    //   return;
+    // }
+    // setError("");
+
     (async function () {
       try {
         let code;
@@ -148,7 +161,7 @@ export const CreateEventPage: FC = () => {
               className={menuOpen ? style.clipped : ""}
               margin="none"
               id="title"
-              label="Название"
+              label="Название*"
               name="title"
               style={{ width: "420px" }}
               value={evt?.title}
@@ -175,7 +188,7 @@ export const CreateEventPage: FC = () => {
                   className={menuOpen ? style.clipped : ""}
                   margin="none"
                   id="seats"
-                  label="Количество мест"
+                  label="Количество мест*"
                   name="total_seats"
                   value={evt?.total_seats}
                   style={{ height: '56px' }}
@@ -198,7 +211,7 @@ export const CreateEventPage: FC = () => {
                 sx={{ width: "420px" }}>
                 {evt?.type
                   ? Categories.find((value) => value[1] === evt.type)?.[0]
-                  : "Категория"}
+                  : "Категория*"}
               </MenuButton>
               <Menu slots={{ listbox: AnimatedListbox }}
                 style={{ width: "420px" }}>
@@ -215,13 +228,13 @@ export const CreateEventPage: FC = () => {
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 className={menuOpen ? style.clipped : ""}
-                sx={{ width: "420px" }} label="Дата" value={edit ? event.date : new Date()} onChange={handleDateChange} />
+                sx={{ width: "420px" }} label="Дата*" onChange={handleDateChange} />
             </LocalizationProvider>
 
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <TimePicker
                 className={menuOpen ? style.clipped : ""}
-                sx={{ width: "420px" }} label="Время" value={edit ? event.date : new Date()} onChange={handleTimeChange} />
+                sx={{ width: "420px" }} label="Время*" onChange={handleTimeChange} />
             </LocalizationProvider>
           </div>
 
@@ -237,6 +250,16 @@ export const CreateEventPage: FC = () => {
         </div>
 
         <div className={style.submit}>
+        {error && 
+          <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 1,
+          }}>
+              <ErrorOutlineRounded  style={{color: variables.error}}/>
+              <Typography variant='body1' style={{color: variables.error}} >{error}</Typography>
+          </Box>}
           <ButtonAKAM onClick={handleSave} filled>Сохранить</ButtonAKAM>
         </div>
       </div>
