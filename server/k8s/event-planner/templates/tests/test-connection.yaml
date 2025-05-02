@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "event-planner.fullname" . }}-test-connection"
+  labels:
+    {{- include "event-planner.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "event-planner.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

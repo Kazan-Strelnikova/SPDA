@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-planner-env
+  namespace: {{ .Release.Namespace }}
+data:
+  POSTGRES_USER: "planner"
+  POSTGRES_PASSWORD: "supersecret"
+  POSTGRES_DB: "plannerdb"
+  POSTGRES_PORT: "5432"
+  POSTGRES_HOST: "postgres"
+  JWT_SECRET: "filler_secret"
+  SERVER_PORT: "8080"
+  RW_TIMEOUT: "15s"
+  IDLE_TIMEOUT: "15m"
+  LOGSTASH_HOST: "logstash"
+  LOGSTASH_PORT: "5044"
+  ELASTIC_PASSWORD: "StrongRandomPassword123!"
+  ELASTIC_APM_SERVER_URL: "http://apmserver:8200"
+  ELASTIC_APM_SECRET_TOKEN: "my-apm-token"
+  ENV: "local"
+  KIBANA_SERVICE_TOKEN: "AAEAAWVsYXN0aWMva2liYW5hL2RlZmF1bHQ6QkN5enFsMERTbm02U210cFgwSHpSdw"
+  KIBANA_USER: "kibana_user"
+  KIBANA_PASSWORD: "KibanaUserPassword123!"
+  KIBANA_ENCRYPTION_KEY: "0d28e393b2f29ee32dd066cd4f7017d4"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "zvukovat@gmail.com"
+  SMTP_PASSWORD: "geeq rrjm cjaq knag"
+  CACHE_ADDR: "redis:6379"
