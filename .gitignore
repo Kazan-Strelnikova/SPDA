@@ -1,1 +1,3 @@
 server/.env
+kubeconfig-team-1.yaml
+server/new.env

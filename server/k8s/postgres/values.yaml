@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  repository: postgis/postgis
+  tag: 15-3.3
+  pullPolicy: IfNotPresent
+
+postgres:
+  port: 5432
+
+existingSecret: postgres-secret
+
+persistence:
+  enabled: true
+  storageClass: "standard" 
+  accessMode: ReadWriteOnce
+  size: 512Mi
+
+service:
+  type: NodePort
+  port: 5432
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "200m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"

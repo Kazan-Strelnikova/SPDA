@@ -4,7 +4,7 @@ apm-server:
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"] 
   username: "elastic" 
-  password: "${ELASTIC_PASSWORD}"
+  password: "StrongRandomPassword123!"
 
 setup.kibana:
   host: "http://kibana:5601" 
