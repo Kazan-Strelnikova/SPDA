@@ -1,0 +1,39 @@
+import axios from "axios";
+import { Categories, Event } from "../types";
+
+export const postEvent = async function(evt: Event, email: string): Promise<number> {
+    try {
+        console.log(evt.total_seats.valueOf())
+        const response = await axios.post("/events", 
+            {
+                title: evt.title,
+                type: evt?.type ? Categories.findIndex((value) => value[1] === evt.type) : 8,
+                date: evt.date,
+                total_seats: Number(evt?.total_seats),
+                creator_email: email,
+                location: evt?.location ? {
+                    latitude: evt.location[0].toString(),
+                    longitude: evt.location[1].toString()
+                }
+                : {
+                    latitude: "40.7128",
+                    longitude: "-74.0060"
+                },
+                has_unlimited_seats: evt?.has_unlimited_seats ? "true" : "false",
+                description: evt?.description ?? ""
+            }, 
+            {
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            }
+        );
+
+        return response.status
+    } catch (err: any) {
+        throw new Error(
+            `failed to fetch user ${email}`
+        )
+    }
+} 

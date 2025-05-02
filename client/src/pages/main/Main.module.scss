@@ -1,0 +1,22 @@
+@import '../../variables.module.scss';
+
+
+.eventBar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    .addButton {
+        gap: 8px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        padding: 5px 24px 5px 16px;
+        align-items: center;
+        border-radius: 100px;
+        color: $primary;
+        background-color: $secondary;
+        text-transform: none;
+    }
+}

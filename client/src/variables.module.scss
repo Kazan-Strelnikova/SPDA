@@ -1,0 +1,25 @@
+$primary: #1D3371;
+$secondary: #DDE2FF;
+$text: #0F0F10;
+$text-secondary: #565D78;
+$background: #FDFDFF;
+$dark: #001345;
+$error: #DF4B4B;
+$error-container: #FFDAD6;
+$text-secondary: #565D78;
+$tint: #475B9C;
+$on-primary-container: #B7C6FF;
+
+/* export as CSS module */
+:export {
+    primary: $primary;
+    secondary: $secondary;
+    text: $text;
+    textSecondary: $text-secondary;
+    background: $background;
+    dark: $dark;
+    error: $error;
+    errorContainer: $error-container;
+    tint: $tint;
+    onPrimaryContainer: $on-primary-container;
+  }

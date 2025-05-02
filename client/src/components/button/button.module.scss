@@ -1,0 +1,14 @@
+@import '../../variables.module.scss';
+
+.filledButton {
+    background-color: $primary !important;
+    color: $background !important;
+    border-radius: 100px !important;
+}
+
+.outlinedButton {
+    background-color: transparent !important;
+    border-color: $primary !important;
+    color: $primary !important;
+    border-radius: 100px !important;
+}

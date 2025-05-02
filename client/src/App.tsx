@@ -1,28 +1,60 @@
-import React from 'react';
-import logo from './logo.svg';
+import React from "react";
+import { Header } from "./components/header/header";
+import { UserProvider } from "./contexts/UserContext";
 import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { MainPage } from "./pages/main/Main";
+import { LogInPage } from "./pages/LogIn";
+import { SignUpPage } from "./pages/SignUp";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import variables from './variables.module.scss';
+import { CreateEventPage } from "./pages/create-event/CreateEvent";
 
-function App() {
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: variables.primary,
+    },
+  },
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            '&.Mui-focused fieldset': {
+              borderColor: variables.primary,
+            },
+          },
+          '& .MuiInputLabel-root.Mui-focused': {
+            color: variables.primary,
+          },
+        },
+      },
+    },
+  },
+});
+
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <div style={{backgroundColor: "green", padding: "30px", borderRadius: "16px"}}>
-          <h1>
-            <b><a href="https://rutube.ru/video/c6cc4d620b1d4338901770a44b3e82f4/" style={{color: "white"}}>Click me!</a></b>
-          </h1>
-        </div>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <Router basename="/eventify">
+        <UserProvider>
+          <div className="App" style={{ padding: "0 140px" }}>
+            <Header />
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="/create" element={<CreateEventPage />} />
+              <Route path="/login" element={<LogInPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+            </Routes>
+          </div>
+        </UserProvider>
+          
+      </Router>
+      </ThemeProvider>
+      
   );
-}
+};
 
 export default App;

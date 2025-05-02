@@ -1,0 +1,418 @@
+import { Box, styled, Switch, TextField, Typography } from "@mui/material";
+import React, { ChangeEvent, FC, useContext, useState } from "react";
+import BackIcon from "../../assets/back.svg";
+import style from "./CreateEvent.module.scss";
+import { Categories, Event } from "../../types";
+import {
+  DatePicker,
+  DateValidationError,
+  LocalizationProvider,
+  PickerChangeHandlerContext,
+  TimePicker,
+  TimeValidationError,
+} from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import variables from '../../variables.module.scss';
+import {
+  Dropdown,
+  Menu,
+  MenuButton as BaseMenuButton,
+  MenuItem as BaseMenuItem,
+  menuItemClasses,
+  MenuListboxSlotProps,
+  PopupContext,
+  CssTransition,
+} from "@mui/base";
+import { PickerValue } from "@mui/x-date-pickers/internals";
+import { ButtonAKAM } from "../../components/button/button";
+import LocationPicker from "../../components/location-picker/location-picker"
+import { postEvent } from "../../http/post-event";
+import { putEvent } from "../../http/put-event";
+import { UserContext } from "../../contexts/UserContext";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ErrorOutlineRounded } from "@mui/icons-material";
+
+export const CreateEventPage: FC = () => {
+  const location = useLocation();
+
+  const { edit, event }: { edit: boolean, event: Event } = location.state ?? {edit: false, event: undefined};
+  const [menuOpen, setMenuOpen] = useState<boolean>();
+  const userContext = useContext(UserContext);
+  const [error, setError] = useState<string>("");
+
+  if (!userContext) {
+    throw new Error("Calendar must be used within a UserProvider");
+  }
+  const { user } = userContext;
+
+  const [evt, setEvt] = useState<Event>(!event || !user?.email ? {has_unlimited_seats: true} as Event : event);
+
+  const [checked, setChecked] = React.useState(true);
+
+  const handleChangeSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if(event.target.checked) {setEvt(prev => ({...prev, has_unlimited_seats: true}));}
+    setChecked(event.target.checked);
+  };
+
+
+
+  const navigate = useNavigate()
+
+  const createHandleMenuClick = (menuItem: string) => {
+    return () =>
+      setEvt(
+        (prev) =>
+        ({
+          ...prev,
+          type: menuItem,
+        } as Event)
+      );
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEvt({
+      ...evt,
+      [name]: value,
+    } as Event);
+  };
+
+  const handleDateChange = (
+    value: PickerValue,
+    _context: PickerChangeHandlerContext<DateValidationError>
+  ) => {
+    if (value !== null) {
+      const newDate = new Date(value);
+      if (evt?.date) {
+        newDate.setHours(evt.date.getHours(), evt.date.getMinutes(), 0, 0);
+      }
+      setEvt({
+        ...evt,
+        date: newDate,
+      } as Event);
+    }
+  };
+
+  const handleTimeChange = (
+    value: PickerValue,
+    _context: PickerChangeHandlerContext<TimeValidationError>
+  ) => {
+    if (value !== null) {
+      const newTime = new Date(value);
+      const baseDate = evt?.date ?? new Date();
+      console.log(evt?.date, baseDate)
+      newTime.setFullYear(
+        baseDate.getFullYear(),
+        baseDate.getMonth(),
+        baseDate.getDate()
+      );
+
+      setEvt({
+        ...evt,
+        date: newTime,
+      } as Event);
+    }
+  };
+
+
+  const handleSave = () => {
+    // console.log(evt)
+    // if (!evt || evt.title === "" || !evt.type || !evt.date || !evt.location){
+    //   setError("Все обязательные поля должны быть заполнены");
+    //   return;
+    // }
+    // if (!evt.has_unlimited_seats && (evt.available_seats <= 0 || evt.available_seats > 150000)){
+    //   setError("Введите корректное количество мест");
+    //   return;
+    // }
+    // setError("");
+
+    (async function () {
+      try {
+        let code;
+        if (edit){
+          code = await putEvent(evt as Event, user?.email ?? "");
+        } else {
+          code = await postEvent(evt as Event, user?.email ?? "");
+        }
+        if (code >= 400) {
+          alert("Could not save event")
+          return
+        }
+
+        navigate("/")
+      } catch (err: any) {
+        alert("Could not save event")
+      }
+    })()
+  }
+
+  return (
+    <div className={style.page}>
+      <div className={style.label}>
+        <img src={BackIcon} alt="back" onClick={() => navigate(-1)} style={{ cursor: 'pointer' }} />
+        {edit ? <Typography variant="h5"> Редактировать Событие </Typography> : <Typography variant="h5"> Новое Событие </Typography>}
+      </div>
+
+      <div className={style.box}>
+        <div className={style.inputs}>
+          <div className={style.vertical}>
+            <TextField
+              className={menuOpen ? style.clipped : ""}
+              margin="none"
+              id="title"
+              label="Название*"
+              name="title"
+              style={{ width: "420px" }}
+              value={evt?.title}
+              onChange={handleChange}
+              variant="outlined"
+            />
+            <TextField
+              className={menuOpen ? style.clipped : ""}
+              margin="none"
+              id="description"
+              label="Описание"
+              name="description"
+              style={{ width: "420px" }}
+              value={evt?.description}
+              onChange={handleChange}
+              variant="outlined"
+              multiline
+              minRows={5}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: "10px", width: '420px', height: '56px' }}>
+              <Switch aria-label="switch" checked={checked} onChange={handleChangeSwitch} />
+              {checked ? "Неограниченное количество мест" :
+                <TextField
+                  className={menuOpen ? style.clipped : ""}
+                  margin="none"
+                  id="seats"
+                  label="Количество мест*"
+                  name="total_seats"
+                  value={evt?.total_seats}
+                  style={{ height: '56px' }}
+                  fullWidth
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (/^\d*$/.test(newValue)) {
+                      handleChange(e as ChangeEvent<HTMLInputElement>);
+                    }
+                  }}
+                  variant="outlined"
+                  helperText="от 1 до 150 000"
+                />}
+            </div>
+
+          </div>
+          <div className={style.vertical}>
+            <Dropdown onOpenChange={() => setMenuOpen((prev) => !prev)}>
+              <MenuButton
+                sx={{ width: "420px" }}>
+                {evt?.type
+                  ? Categories.find((value) => value[1] === evt.type)?.[0]
+                  : "Категория*"}
+              </MenuButton>
+              <Menu slots={{ listbox: AnimatedListbox }}
+                style={{ width: "420px" }}>
+                {Categories.map((value, _idx) => {
+                  return (
+                    <MenuItem onClick={createHandleMenuClick(value[1])}>
+                      {value[0]}
+                    </MenuItem>
+                  );
+                })}
+              </Menu>
+            </Dropdown>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                className={menuOpen ? style.clipped : ""}
+                sx={{ width: "420px" }} label="Дата*" onChange={handleDateChange} />
+            </LocalizationProvider>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <TimePicker
+                className={menuOpen ? style.clipped : ""}
+                sx={{ width: "420px" }} label="Время*" onChange={handleTimeChange} />
+            </LocalizationProvider>
+          </div>
+
+
+
+          <LocationPicker onLocationChange={function (coords) {
+            setEvt({
+              ...evt,
+              location: [coords.lat, coords.lng]
+            } as Event);
+            console.log(evt);
+          }} />
+        </div>
+
+        <div className={style.submit}>
+        {error && 
+          <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 1,
+          }}>
+              <ErrorOutlineRounded  style={{color: variables.error}}/>
+              <Typography variant='body1' style={{color: variables.error}} >{error}</Typography>
+          </Box>}
+          <ButtonAKAM onClick={handleSave} filled>Сохранить</ButtonAKAM>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const blue = {
+  50: "#F0F7FF",
+  100: "#C2E0FF",
+  200: "#99CCF3",
+  300: "#66B2FF",
+  400: "#3399FF",
+  500: "#007FFF",
+  600: "#0072E6",
+  700: "#0059B3",
+  800: "#004C99",
+  900: "#003A75",
+};
+
+const grey = {
+  50: "#F3F6F9",
+  100: "#E5EAF2",
+  200: "#DAE2ED",
+  300: "#C7D0DD",
+  400: "#B0B8C4",
+  500: "#9DA8B7",
+  600: "#6B7A90",
+  700: "#434D5B",
+  800: "#303740",
+  900: "#1C2025",
+};
+
+const Listbox = styled("ul")(
+  ({ theme }) => `
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    box-sizing: border-box;
+    padding: 6px;
+    margin: 12px 0;
+    min-width: 200px;
+    border-radius: 12px;
+    overflow: auto;
+    outline: 0;
+    background: ${theme.palette.mode === "dark" ? grey[900] : "#fff"};
+    border: 1px solid ${theme.palette.mode === "dark" ? grey[700] : grey[200]};
+    color: ${theme.palette.mode === "dark" ? grey[300] : grey[900]};
+    box-shadow: 0 4px 30px ${theme.palette.mode === "dark" ? grey[900] : grey[200]
+    };
+    z-index: 1;
+  
+    .closed & {
+      opacity: 0;
+      transform: scale(0.95, 0.8);
+      transition: opacity 200ms ease-in, transform 200ms ease-in;
+    }
+    
+    .open & {
+      opacity: 1;
+      transform: scale(1, 1);
+      transition: opacity 100ms ease-out, transform 100ms cubic-bezier(0.43, 0.29, 0.37, 1.48);
+    }
+  
+    .placement-top & {
+      transform-origin: bottom;
+    }
+  
+    .placement-bottom & {
+      transform-origin: top;
+    }
+    `
+);
+
+const AnimatedListbox = React.forwardRef(function AnimatedListbox(
+  props: MenuListboxSlotProps,
+  ref: React.ForwardedRef<HTMLUListElement>
+) {
+  const { ownerState, ...other } = props;
+  const popupContext = React.useContext(PopupContext);
+
+  if (popupContext == null) {
+    throw new Error(
+      "The `AnimatedListbox` component cannot be rendered outside a `Popup` component"
+    );
+  }
+
+  const verticalPlacement = popupContext.placement.split("-")[0];
+
+  return (
+    <CssTransition
+      className={`placement-${verticalPlacement} ${style.dropdown}`}
+      enterClassName="open"
+      exitClassName="closed"
+    >
+      <Listbox {...other} ref={ref} />
+    </CssTransition>
+  );
+});
+
+const MenuItem = styled(BaseMenuItem)(
+  ({ theme }) => `
+    list-style: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: default;
+    user-select: none;
+  
+    &:last-of-type {
+      border-bottom: none;
+    }
+  
+    &:focus {
+      outline: 3px solid ${theme.palette.mode === "dark" ? blue[600] : blue[200]
+    };
+      background-color: ${theme.palette.mode === "dark" ? grey[800] : grey[100]
+    };
+      color: ${theme.palette.mode === "dark" ? grey[300] : grey[900]};
+    }
+  
+    &.${menuItemClasses.disabled} {
+      color: ${theme.palette.mode === "dark" ? grey[700] : grey[400]};
+    }
+    `
+);
+
+const MenuButton = styled(BaseMenuButton)(
+  ({ theme }) => `
+    // font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.5;
+    text-align: start;
+    padding: 16.5px 14px;
+    border-radius: 8px;
+    transition: all 150ms ease;
+    cursor: pointer;
+    background: ${theme.palette.mode === "dark" ? grey[900] : "#fff"};
+    border: 1px solid ${theme.palette.mode === "dark" ? grey[700] : grey[400]};
+    color: ${theme.palette.mode === "dark" ? grey[200] : grey[700]};
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  
+    &:hover {
+      background: ${theme.palette.mode === "dark" ? grey[800] : grey[50]};
+      border-color: ${theme.palette.mode === "dark" ? grey[600] : grey[300]};
+    }
+  
+    &:active {
+      background: ${theme.palette.mode === "dark" ? grey[700] : grey[100]};
+    }
+  
+    &:focus-visible {
+      box-shadow: 0 0 0 4px ${theme.palette.mode === "dark" ? blue[300] : blue[200]
+    };
+      outline: none;
+    }
+    `
+);

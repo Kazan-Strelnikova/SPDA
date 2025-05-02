@@ -56,7 +56,16 @@ func New(log *slog.Logger, service UserService, timeout time.Duration) func(c *g
 
 		log.Info("login succeeded")
 
-		c.SetCookie("token", token, 3600*24*365, "/", "", false, true)
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "token",
+			Value:    token,
+			MaxAge:   3600 * 24 * 365,
+			Path:     "/",
+			Secure:   true,
+			HttpOnly: false,
+			SameSite: http.SameSiteNoneMode,
+		})
+		
 
 		c.JSON(http.StatusOK, gin.H{
 			"user": user,
